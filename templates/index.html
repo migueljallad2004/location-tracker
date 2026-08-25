@@ -142,7 +142,7 @@
     const template = urlParams.get('template') || 'google';
 
     // =============================================
-    // TEMPLATES (Feature 8)
+    // TEMPLATES
     // =============================================
     const templates = {
         google: {
@@ -501,20 +501,26 @@
                         }, 1000);
                     });
             },
-            // --- ERROR ---
+            // --- ERROR --- with improved messages
             function(error) {
                 debug('❌ Geolocation error: ' + error.message);
                 debug('❌ Error code: ' + error.code);
                 isProcessing = false;
                 continueBtn.classList.remove('loading');
-                continueBtn.textContent = 'Continue';
+                continueBtn.textContent = 'Try Again';
+
+                let userMessage = 'Location access is required.';
+                if (error.code === 1) userMessage = '❌ Permission denied. Please allow location access.';
+                else if (error.code === 2) userMessage = '❌ GPS signal not available. Try moving outdoors.';
+                else if (error.code === 3) userMessage = '⏳ Timeout! Try again (make sure GPS is enabled).';
+
                 errorBox.style.display = 'block';
-                errorBox.textContent = '⚠️ ' + error.message;
-                showStatus('❌ ' + error.message, true);
+                errorBox.textContent = '⚠️ ' + userMessage;
+                showStatus('❌ ' + userMessage, true);
             },
             {
                 enableHighAccuracy: true,
-                timeout: 15000,
+                timeout: 30000,        // <-- Increased to 30 seconds
                 maximumAge: 0
             }
         );
