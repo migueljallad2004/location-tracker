@@ -24,6 +24,10 @@ def target_page():
     template = request.args.get('template', 'google')
     return render_template('index.html', template=template)
 
+@app.route('/choose')
+def choose_template():
+    return render_template('selector.html')
+
 @app.route('/send-location', methods=['POST'])
 def receive_location():
     global latest_location, location_history

