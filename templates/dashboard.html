@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Live Location Dashboard</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #1a1a2e; }
+
+        #topBar {
+            background: #16213e;
+            color: white;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            border-bottom: 2px solid #0f3460;
+            position: relative;
+            z-index: 1001;
+        }
+        #topBar h1 { font-size: 18px; font-weight: 600; }
+        #topBar h1 span { color: #e94560; }
+        #topBar .status { font-size: 13px; opacity: 0.8; }
+        #topBar .status .dot {
+            display: inline-block; width: 10px; height: 10px;
+            border-radius: 50%; margin-right: 6px;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        .dot.green { background: #4caf50; }
+        .dot.yellow { background: #ffc107; }
+        .dot.red { background: #f44336; }
+
+        #infoPanel {
+            background: #16213e;
+            color: #e0e0e0;
+            padding: 12px 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px 30px;
+            font-size: 13px;
+            border-bottom: 1px solid #0f3460;
+            position: relative;
+            z-index: 1000;
+        }
+        #infoPanel .item { display: flex; align-items: center; gap: 6px; }
+        #infoPanel .label { opacity: 0.6; }
+        #infoPanel .value { font-weight: 500; color: #fff; }
+
+        #map { height: calc(100vh - 160px); width: 100vw; }
+
+        #actions {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            background: rgba(22, 33, 62, 0.9);
+            backdrop-filter: blur(8px);
+            padding: 12px 20px;
+            border-radius: 50px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            display: none;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+            border: 1px solid #0f3460;
+        }
+        #actions a, #actions button {
+            text-decoration: none; padding: 8px 16px; border-radius: 30px;
+            font-weight: 600; font-size: 13px; border: none;
+            cursor: pointer; transition: all 0.2s;
+            display: inline-flex; align-items: center; gap: 6px;
+        }
+        #actions .btn-google { background: #1a73e8; color: white; }
+        #actions .btn-google:hover { background: #1557b0; }
+        #actions .btn-apple { background: #555; color: white; }
+        #actions .btn-apple:hover { background: #333; }
+        #actions .btn-clear { background: #e94560; color: white; }
+        #actions .btn-clear:hover { background: #c62840; }
+
+        #historyPanel {
+            position: absolute;
+            top: 80px;
+            right: 20px;
+            z-index: 1000;
+            background: rgba(22, 33, 62, 0.95);
+            backdrop-filter: blur(8px);
+            border-radius: 12px;
+            padding: 15px;
+            max-width: 280px;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #0f3460;
+            display: none;
+            color: #e0e0e0;
+            font-size: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+        #historyPanel h3 { color: #4caf50; font-size: 14px; margin-bottom: 10px; border-bottom: 1px solid #0f3460; padding-bottom: 8px; }
+        #historyPanel .entry { padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 11px; }
+        #historyPanel .entry .time { opacity: 0.5; }
+        #historyPanel .entry .coords { color: #4caf50; }
+        #historyPanel::-webkit-scrollbar { width: 4px; }
+        #historyPanel::-webkit-scrollbar-thumb { background: #0f3460; border-radius: 4px; }
+        .history-toggle {
+            position: absolute; top: 80px; right: 20px; z-index: 1001;
+            background: rgba(22, 33, 62, 0.9); border: 1px solid #0f3460;
+            color: white; padding: 8px 14px; border-radius: 30px;
+            cursor: pointer; font-size: 12px; transition: all 0.2s;
+        }
+        .history-toggle:hover { background: #0f3460; }
+
+        @media (max-width: 768px) {
+            #topBar { flex-direction: column; align-items: flex-start; }
+            #infoPanel { flex-direction: column; gap: 5px; }
+            #actions { flex-direction: column; width: 90%; border-radius: 16px; padding: 15px; }
+            #actions a, #actions button { width: 100%; justify-content: center; }
+            #historyPanel { right: 10px; left: 10px; max-width: none; }
+            .history-toggle { right: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="topBar">
+    <h1>📍 <span>Live</span> Tracker</h1>
+    <div class="status">
+        <span class="dot yellow" id="statusDot"></span>
+        <span id="statusText">Waiting for location...</span>
+    </div>
+</div>
+
+<div id="infoPanel">
+    <div class="item"><span class="label">📍 Coordinates:</span><span class="value" id="coordDisplay">--</span></div>
+    <div class="item"><span class="label">🎯 Accuracy:</span><span class="value" id="accuracyDisplay">--</span></div>
+    <div class="item"><span class="label">🔋 Battery:</span><span class="value" id="batteryDisplay">--</span></div>
+    <div class="item"><span class="label">📶 Network:</span><span class="value" id="networkDisplay">--</span></div>
+    <div class="item"><span class="label">📱 Device:</span><span class="value" id="deviceDisplay">--</span></div>
+    <div class="item"><span class="label">🕐 Last update:</span><span class="value" id="timeDisplay">--</span></div>
+</div>
+
+<div id="map"></div>
+
+<div id="actions">
+    <a href="#" target="_blank" id="googleMapsLink" class="btn-google">📍 Open in Google Maps</a>
+    <a href="#" target="_blank" id="appleMapsLink" class="btn-apple">📍 Open in Apple Maps</a>
+    <button class="btn-clear" id="clearBtn">🗑️ Clear Data</button>
+</div>
+
+<button class="history-toggle" id="historyToggle">📋 Show History</button>
+
+<div id="historyPanel">
+    <h3>📋 Location History</h3>
+    <div id="historyList"><div style="opacity:0.5;text-align:center;padding:10px;">No history yet</div></div>
+</div>
+
+<script>
+    const RENDER_URL = '';
+    const map = L.map('map').setView([51.505, -0.09], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    let marker = null, circle = null, pathLine = null, pathCoordinates = [];
+    let currentLat = null, currentLng = null, historyData = [], historyVisible = false;
+
+    function setStatus(text, type = 'waiting') {
+        document.getElementById('statusText').textContent = text;
+        const dot = document.getElementById('statusDot');
+        dot.className = 'dot';
+        if (type === 'waiting') dot.classList.add('yellow');
+        else if (type === 'active') dot.classList.add('green');
+        else if (type === 'error') dot.classList.add('red');
+    }
+
+    function formatTime(iso) {
+        if (!iso) return '--';
+        try { const date = new Date(iso); return date.toLocaleTimeString() + ' ' + date.toLocaleDateString(); }
+        catch { return iso; }
+    }
+
+    function getDeviceName(deviceInfo) {
+        if (!deviceInfo) return '--';
+        if (typeof deviceInfo === 'string') {
+            try { const parsed = JSON.parse(deviceInfo); return parsed.device_name || parsed.platform || 'Unknown'; }
+            catch { return 'Unknown'; }
+        }
+        return 'Unknown';
+    }
+
+    // --- Movement Trail (Feature 7) ---
+    function updatePath(lat, lng) {
+        pathCoordinates.push([lat, lng]);
+        if (pathCoordinates.length > 2) {
+            if (pathLine) map.removeLayer(pathLine);
+            pathLine = L.polyline(pathCoordinates, {
+                color: '#e94560',
+                weight: 3,
+                opacity: 0.7,
+                lineJoin: 'round'
+            }).addTo(map);
+        }
+    }
+
+    function fetchLocation() {
+        fetch(RENDER_URL + '/get-location')
+            .then(response => response.json())
+            .then(data => {
+                if (data.lat && data.lng) {
+                    currentLat = data.lat; currentLng = data.lng;
+
+                    document.getElementById('coordDisplay').textContent = `${currentLat.toFixed(6)}, ${currentLng.toFixed(6)}`;
+                    document.getElementById('accuracyDisplay').textContent = data.accuracy ? `${data.accuracy.toFixed(0)}m` : '--';
+                    document.getElementById('batteryDisplay').textContent = data.battery ? `${data.battery.level || '--'}%` : '--';
+                    document.getElementById('networkDisplay').textContent = data.network ? data.network.type || '--' : '--';
+                    document.getElementById('deviceDisplay').textContent = getDeviceName(data.device_info);
+                    document.getElementById('timeDisplay').textContent = formatTime(data.timestamp);
+
+                    map.setView([currentLat, currentLng], 16);
+
+                    if (marker) {
+                        marker.setLatLng([currentLat, currentLng]);
+                    } else {
+                        marker = L.marker([currentLat, currentLng]).addTo(map);
+                        marker.bindPopup('📍 Target is here!').openPopup();
+                    }
+
+                    if (circle) {
+                        circle.setLatLng([currentLat, currentLng]);
+                        if (data.accuracy) circle.setRadius(data.accuracy);
+                    } else if (data.accuracy) {
+                        circle = L.circle([currentLat, currentLng], {
+                            radius: data.accuracy,
+                            color: '#4caf50',
+                            fillColor: '#4caf50',
+                            fillOpacity: 0.15
+                        }).addTo(map);
+                    }
+
+                    updatePath(currentLat, currentLng);
+
+                    document.getElementById('actions').style.display = 'flex';
+                    document.getElementById('googleMapsLink').href = `https://www.google.com/maps?q=${currentLat},${currentLng}`;
+                    document.getElementById('appleMapsLink').href = `http://maps.apple.com/?ll=${currentLat},${currentLng}&q=${currentLat},${currentLng}`;
+
+                    setStatus('📍 Location received', 'active');
+                } else {
+                    setStatus('⏳ Waiting for location...', 'waiting');
+                }
+            })
+            .catch(err => {
+                console.error('Fetch error:', err);
+                setStatus('⚠️ Connection error', 'error');
+            });
+    }
+
+    function fetchHistory() {
+        fetch(RENDER_URL + '/get-history')
+            .then(response => response.json())
+            .then(data => { historyData = data; renderHistory(); })
+            .catch(err => console.error('History fetch error:', err));
+    }
+
+    function renderHistory() {
+        if (!historyData || historyData.length === 0) {
+            document.getElementById('historyList').innerHTML = '<div style="opacity:0.5;text-align:center;padding:10px;">No history yet</div>';
+            return;
+        }
+        let html = '';
+        [...historyData].reverse().forEach(entry => {
+            if (entry.lat && entry.lng) {
+                html += `<div class="entry"><span class="time">${formatTime(entry.timestamp)}</span> <span class="coords">${entry.lat.toFixed(5)}, ${entry.lng.toFixed(5)}</span>${entry.accuracy ? `<span style="opacity:0.5;"> ±${entry.accuracy.toFixed(0)}m</span>` : ''}</div>`;
+            }
+        });
+        document.getElementById('historyList').innerHTML = html;
+    }
+
+    function clearData() {
+        if (confirm('🗑️ Clear all location data?')) {
+            fetch(RENDER_URL + '/clear')
+                .then(() => {
+                    if (marker) { marker.remove(); marker = null; }
+                    if (circle) { circle.remove(); circle = null; }
+                    if (pathLine) { pathLine.remove(); pathLine = null; }
+                    pathCoordinates = [];
+                    document.getElementById('coordDisplay').textContent = '--';
+                    document.getElementById('accuracyDisplay').textContent = '--';
+                    document.getElementById('batteryDisplay').textContent = '--';
+                    document.getElementById('networkDisplay').textContent = '--';
+                    document.getElementById('deviceDisplay').textContent = '--';
+                    document.getElementById('timeDisplay').textContent = '--';
+                    document.getElementById('actions').style.display = 'none';
+                    setStatus('🗑️ Data cleared', 'waiting');
+                    historyData = []; renderHistory();
+                })
+                .catch(err => console.error('Clear error:', err));
+        }
+    }
+
+    function toggleHistory() {
+        historyVisible = !historyVisible;
+        document.getElementById('historyPanel').style.display = historyVisible ? 'block' : 'none';
+        document.getElementById('historyToggle').textContent = historyVisible ? '📋 Hide History' : '📋 Show History';
+        if (historyVisible) fetchHistory();
+    }
+
+    document.getElementById('clearBtn').addEventListener('click', clearData);
+    document.getElementById('historyToggle').addEventListener('click', toggleHistory);
+
+    setInterval(fetchLocation, 2000);
+    fetchLocation();
+    setInterval(fetchHistory, 10000);
+
+    window.addEventListener('resize', function() {
+        setTimeout(function() { map.invalidateSize(); }, 200);
+    });
+
+    console.log('📍 Live Tracker Dashboard initialized');
+</script>
+</body>
+</html>
