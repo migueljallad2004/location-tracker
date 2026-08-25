@@ -68,7 +68,7 @@
 
 <div class="container">
     <h1>📍 Location Test</h1>
-    <div class="status waiting" id="status">⏳ Waiting for location...</div>
+    <div class="status waiting" id="status">⏳ Press button to get location</div>
     <div class="coords" id="coords">--</div>
     <button class="btn" id="getLocationBtn">📍 Get My Location</button>
     <div class="debug" id="debugLog">📋 Logs will appear here...</div>
@@ -205,9 +205,6 @@
     debug('🚀 Page loaded');
     debug('📍 RENDER_URL: ' + RENDER_URL);
     debug('📱 User Agent: ' + navigator.userAgent);
-
-    // Uncomment below to auto‑get location on load (optional)
-    // getLocation();
 </script>
 </body>
 </html>

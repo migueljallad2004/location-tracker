@@ -6,7 +6,6 @@ from datetime import datetime
 app = Flask(__name__)
 CORS(app)
 
-# Data storage
 latest_location = {
     "lat": None,
     "lng": None,
