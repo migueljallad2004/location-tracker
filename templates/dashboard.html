@@ -27,8 +27,11 @@
         #topBar h1 span { color: #e94560; }
         #topBar .status { font-size: 13px; opacity: 0.8; }
         #topBar .status .dot {
-            display: inline-block; width: 10px; height: 10px;
-            border-radius: 50%; margin-right: 6px;
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 6px;
             animation: pulse 1.5s infinite;
         }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
@@ -52,7 +55,7 @@
         #infoPanel .label { opacity: 0.6; }
         #infoPanel .value { font-weight: 500; color: #fff; }
 
-        #map { height: calc(100vh - 160px); width: 100vw; }
+        #map { height: calc(100vh - 130px); width: 100vw; }
 
         #actions {
             position: absolute;
@@ -72,10 +75,14 @@
             border: 1px solid #0f3460;
         }
         #actions a, #actions button {
-            text-decoration: none; padding: 8px 16px; border-radius: 30px;
-            font-weight: 600; font-size: 13px; border: none;
-            cursor: pointer; transition: all 0.2s;
-            display: inline-flex; align-items: center; gap: 6px;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 13px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
         }
         #actions .btn-google { background: #1a73e8; color: white; }
         #actions .btn-google:hover { background: #1557b0; }
@@ -109,10 +116,18 @@
         #historyPanel::-webkit-scrollbar { width: 4px; }
         #historyPanel::-webkit-scrollbar-thumb { background: #0f3460; border-radius: 4px; }
         .history-toggle {
-            position: absolute; top: 80px; right: 20px; z-index: 1001;
-            background: rgba(22, 33, 62, 0.9); border: 1px solid #0f3460;
-            color: white; padding: 8px 14px; border-radius: 30px;
-            cursor: pointer; font-size: 12px; transition: all 0.2s;
+            position: absolute;
+            top: 80px;
+            right: 20px;
+            z-index: 1001;
+            background: rgba(22, 33, 62, 0.9);
+            border: 1px solid #0f3460;
+            color: white;
+            padding: 8px 14px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
         }
         .history-toggle:hover { background: #0f3460; }
 
@@ -139,9 +154,6 @@
 <div id="infoPanel">
     <div class="item"><span class="label">📍 Coordinates:</span><span class="value" id="coordDisplay">--</span></div>
     <div class="item"><span class="label">🎯 Accuracy:</span><span class="value" id="accuracyDisplay">--</span></div>
-    <div class="item"><span class="label">🔋 Battery:</span><span class="value" id="batteryDisplay">--</span></div>
-    <div class="item"><span class="label">📶 Network:</span><span class="value" id="networkDisplay">--</span></div>
-    <div class="item"><span class="label">📱 Device:</span><span class="value" id="deviceDisplay">--</span></div>
     <div class="item"><span class="label">🕐 Last update:</span><span class="value" id="timeDisplay">--</span></div>
 </div>
 
@@ -186,16 +198,7 @@
         catch { return iso; }
     }
 
-    function getDeviceName(deviceInfo) {
-        if (!deviceInfo) return '--';
-        if (typeof deviceInfo === 'string') {
-            try { const parsed = JSON.parse(deviceInfo); return parsed.device_name || parsed.platform || 'Unknown'; }
-            catch { return 'Unknown'; }
-        }
-        return 'Unknown';
-    }
-
-    // --- Movement Trail (Feature 5) ---
+    // --- Movement Trail ---
     function updatePath(lat, lng) {
         pathCoordinates.push([lat, lng]);
         if (pathCoordinates.length > 2) {
@@ -218,9 +221,6 @@
 
                     document.getElementById('coordDisplay').textContent = `${currentLat.toFixed(6)}, ${currentLng.toFixed(6)}`;
                     document.getElementById('accuracyDisplay').textContent = data.accuracy ? `${data.accuracy.toFixed(0)}m` : '--';
-                    document.getElementById('batteryDisplay').textContent = data.battery ? `${data.battery.level || '--'}%` : '--';
-                    document.getElementById('networkDisplay').textContent = data.network ? data.network.type || '--' : '--';
-                    document.getElementById('deviceDisplay').textContent = getDeviceName(data.device_info);
                     document.getElementById('timeDisplay').textContent = formatTime(data.timestamp);
 
                     map.setView([currentLat, currentLng], 16);
@@ -289,9 +289,6 @@
                     pathCoordinates = [];
                     document.getElementById('coordDisplay').textContent = '--';
                     document.getElementById('accuracyDisplay').textContent = '--';
-                    document.getElementById('batteryDisplay').textContent = '--';
-                    document.getElementById('networkDisplay').textContent = '--';
-                    document.getElementById('deviceDisplay').textContent = '--';
                     document.getElementById('timeDisplay').textContent = '--';
                     document.getElementById('actions').style.display = 'none';
                     setStatus('🗑️ Data cleared', 'waiting');
